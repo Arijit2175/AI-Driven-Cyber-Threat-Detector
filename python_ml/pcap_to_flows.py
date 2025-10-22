@@ -1,8 +1,8 @@
 import pandas as pd
 import os
 
-INPUT_CSV = '../datasets/packets_raw.csv'
-OUTPUT_CSV = '../datasets/sample_traffic.csv'
+INPUT_CSV = 'datasets/raw_packets.csv'
+OUTPUT_CSV = 'datasets/sample_traffic.csv'
 
 def build_flows(df):
     for col in ['tcp.srcport','tcp.dstport','udp.srcport','udp.dstport','_ws.col.protocol','frame.len']:
