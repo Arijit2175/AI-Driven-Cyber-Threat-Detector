@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import joblib
 import os
 
-FLOW_CSV = '../datasets/sample_traffic.csv'
+FLOW_CSV = "datasets/sample_traffic.csv"
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
 PROTOCOL_ENCODER_FILE = 'protocol_label_encoder.pkl'
