@@ -2,4 +2,4 @@
 *.pkl
 __pycache__/
 *.pyc 
-.jar
+*.jar
