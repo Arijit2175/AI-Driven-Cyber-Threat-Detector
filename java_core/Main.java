@@ -15,16 +15,17 @@ public class Main {
         List<Map<String, String>> flows = capture.readFlows();
 
         for (Map<String, String> flowMap : flows) {
-            double[] features = FeatureExtractor.extractFeatures(flowMap);
-            int prediction = detector.predict(features);
+    double[] features = FeatureExtractor.extractFeatures(flowMap);
+    int prediction = detector.predict(features);
 
-            if (prediction == 1) {
-                logger.logAlert("Malicious flow detected: " + Arrays.toString(features));
-                System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
-            } else {
-                System.out.println("Normal flow: " + Arrays.toString(features));
-            }
-        }
+    if (prediction == 1) {
+        logger.logAlert("Malicious flow detected: " + Arrays.toString(features));
+        System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
+    } else {
+        logger.logAlert("Normal flow: " + Arrays.toString(features)); 
+        System.out.println("Normal flow: " + Arrays.toString(features));
+    }
+}
 
         System.out.println("Detection complete. Alerts logged to " + logFile);
     }
