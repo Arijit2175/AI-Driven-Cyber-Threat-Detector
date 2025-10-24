@@ -5,17 +5,16 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String csvFile = "../datasets/sample_traffic.csv";
+        String csvFile = ".." + File.separator + "datasets" + File.separator + "sample_traffic.csv";
         String serverUrl = "http://127.0.0.1:5000/predict";
 
-        String logFilePath = System.getProperty("user.dir") + File.separator + ".." + File.separator + "logs" + File.separator + "alerts.log";
-
-        File logFile = new File(logFilePath);
-        File parentDir = logFile.getParentFile();
-        if (!parentDir.exists()) {
-            parentDir.mkdirs(); 
+        String logFolderPath = ".." + File.separator + "logs";
+        File logFolder = new File(logFolderPath);
+        if (!logFolder.exists()) {
+            logFolder.mkdirs(); 
         }
 
+        String logFilePath = logFolderPath + File.separator + "alerts.log";
         AlertLogger logger = new AlertLogger(logFilePath);
 
         logger.logAlert("=== New detection session started ===");
