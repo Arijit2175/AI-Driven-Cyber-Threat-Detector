@@ -1,4 +1,4 @@
-import java.io.*;
+import java.io.File;
 import java.util.*;
 
 public class Main {
@@ -8,13 +8,20 @@ public class Main {
         String csvFile = "../datasets/sample_traffic.csv";
         String serverUrl = "http://127.0.0.1:5000/predict";
 
-        String logFile = System.getProperty("user.dir") + File.separator + ".." + File.separator + "logs" + File.separator + "alerts.log";
-        AlertLogger logger = new AlertLogger(logFile);
+        String logFilePath = System.getProperty("user.dir") + File.separator + ".." + File.separator + "logs" + File.separator + "alerts.log";
+
+        File logFile = new File(logFilePath);
+        File parentDir = logFile.getParentFile();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs(); 
+        }
+
+        AlertLogger logger = new AlertLogger(logFilePath);
+
+        logger.logAlert("=== New detection session started ===");
 
         PacketCapture capture = new PacketCapture(csvFile);
         ThreatDetector detector = new ThreatDetector(serverUrl);
-
-        logger.logAlert("=== New detection session started ===");
 
         List<Map<String, String>> flows = capture.readFlows();
 
@@ -31,6 +38,6 @@ public class Main {
             }
         }
 
-        System.out.println("Detection complete. Alerts logged to " + logFile);
+        System.out.println("Detection complete. Alerts logged to " + logFilePath);
     }
 }
