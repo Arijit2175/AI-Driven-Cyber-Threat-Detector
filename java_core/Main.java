@@ -8,15 +8,17 @@ public class Main {
         String csvFile = ".." + File.separator + "datasets" + File.separator + "sample_traffic.csv";
         String serverUrl = "http://127.0.0.1:5000/predict";
 
-        String logFolderPath = ".." + File.separator + "logs";
+        String projectRoot = new File(".").getCanonicalFile().getParent();
+        System.out.println("Project root: " + projectRoot);
+
+        String logFolderPath = projectRoot + File.separator + "logs";
         File logFolder = new File(logFolderPath);
-        if (!logFolder.exists()) {
-            logFolder.mkdirs(); 
-        }
+        if (!logFolder.exists()) logFolder.mkdirs();
 
         String logFilePath = logFolderPath + File.separator + "alerts.log";
-        AlertLogger logger = new AlertLogger(logFilePath);
+        System.out.println("Log file path: " + logFilePath);
 
+        AlertLogger logger = new AlertLogger(logFilePath);
         logger.logAlert("=== New detection session started ===");
 
         PacketCapture capture = new PacketCapture(csvFile);
@@ -32,7 +34,6 @@ public class Main {
                 logger.logAlert("Malicious flow detected: " + Arrays.toString(features));
                 System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
             } else {
-                logger.logAlert("Normal flow: " + Arrays.toString(features));
                 System.out.println("Normal flow: " + Arrays.toString(features));
             }
         }
