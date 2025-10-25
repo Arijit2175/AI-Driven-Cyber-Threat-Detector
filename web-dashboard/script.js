@@ -1,6 +1,39 @@
 const DELAY_MS = 2500;
 let displayedIndex = 0;
 
+let maliciousCount = 0;
+let normalCount = 0;
+
+const ctx = document.getElementById('flowChart').getContext('2d');
+const flowChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Malicious Flows', 'Normal Flows', 'Total Scanned'],
+        datasets: [{
+            label: 'Flow Count',
+            data: [0, 0, 0],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(75, 192, 75, 0.7)',
+                'rgba(54, 162, 235, 0.7)'
+            ],
+            borderColor: ['#ff4d4d', '#32cd32', '#36a2eb'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        },
+        plugins: {
+            legend: {
+                labels: { color: '#000' }
+            }
+        }
+    }
+});
+
 async function fetchFlows() {
     try {
         const response = await fetch('http://127.0.0.1:5000/get_flows');
@@ -10,14 +43,6 @@ async function fetchFlows() {
         const flowsTable = document.querySelector('#flows-table tbody');
         const alertsList = document.querySelector('#alerts-list');
         const alertsSummary = document.querySelector('#alerts-summary');
-
-        let maliciousCount = 0;
-        let normalCount = 0;
-
-        document.querySelectorAll('#flows-table tbody tr').forEach(row => {
-            if (row.classList.contains('malicious')) maliciousCount++;
-            else if (row.classList.contains('normal')) normalCount++;
-        });
 
         for (let i = displayedIndex; i < flows.length; i++) {
             const flow = flows[i];
@@ -55,6 +80,9 @@ async function fetchFlows() {
                 <li style="color:#32cd32;">Normal Flows: <strong>${normalCount}</strong></li>
             `;
 
+            flowChart.data.datasets[0].data = [maliciousCount, normalCount, totalFlows];
+            flowChart.update();
+
             await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         }
     } catch (err) {
@@ -69,6 +97,12 @@ themeToggle.addEventListener('click', () => {
     themeToggle.textContent = document.body.classList.contains('dark-theme')
         ? '☀️ Light Mode'
         : '🌙 Dark Mode';
+
+    const isDark = document.body.classList.contains('dark-theme');
+    flowChart.options.plugins.legend.labels.color = isDark ? '#fff' : '#000';
+    flowChart.options.scales.y.ticks.color = isDark ? '#fff' : '#000';
+    flowChart.options.scales.x.ticks.color = isDark ? '#fff' : '#000';
+    flowChart.update();
 });
 
 setInterval(fetchFlows, DELAY_MS);
