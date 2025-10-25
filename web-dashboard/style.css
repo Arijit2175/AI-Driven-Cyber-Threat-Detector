@@ -27,3 +27,12 @@ h1, h2 {
     list-style-type: none;
     padding: 0;
 }
+
+@keyframes highlight {
+  from { background-color: yellow; }
+  to { background-color: transparent; }
+}
+
+tr.new-flow {
+  animation: highlight 2s ease-out;
+}
