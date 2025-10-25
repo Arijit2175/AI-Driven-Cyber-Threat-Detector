@@ -27,30 +27,33 @@
                 <button id="theme-toggle">🌙 Dark Mode</button>
             </div>
 
-            <div class="content-grid">
-    <div class="table-container">
-        <table id="flows-table">
-            <thead>
-                <tr>
-                    <th>Duration</th>
-                    <th>Total Packets</th>
-                    <th>Total Bytes</th>
-                    <th>Mean Packet Length</th>
-                    <th>Packet Rate</th>
-                    <th>Protocol</th>
-                    <th>Prediction</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <div class="data-section">
+                <div class="table-container">
+                    <table id="flows-table">
+                        <thead>
+                            <tr>
+                                <th>Duration</th>
+                                <th>Total Packets</th>
+                                <th>Total Bytes</th>
+                                <th>Mean Packet Length</th>
+                                <th>Packet Rate</th>
+                                <th>Protocol</th>
+                                <th>Prediction</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="chart-section">
+                    <h3>Flow Status Chart</h3>
+                    <canvas id="flowChart"></canvas>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <div class="chart-section">
-        <canvas id="flowChart"></canvas>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
