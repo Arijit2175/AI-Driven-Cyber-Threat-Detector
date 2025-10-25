@@ -2,9 +2,11 @@ from flask import Flask, request, jsonify
 import joblib
 import pandas as pd
 import numpy as np
+import os
 
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
+FRONTEND_FOLDER = "../web-dashboard/index.html"
 
 app = Flask(__name__)
 
@@ -91,6 +93,10 @@ def get_flows():
     global latest_flows
     return jsonify({"flows": latest_flows})
 
+@app.route('/')
+def serve_dashboard():
+    """Serve the dashboard HTML page"""
+    return send_from_directory(FRONTEND_FOLDER, 'index.html')
 
 if __name__ == "__main__":
     app.run(host='127.0.0.1', port=5000)
