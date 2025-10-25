@@ -19,8 +19,7 @@ public class Main {
 
         String maliciousCsvPath = logsFolderPath + File.separator + "malicious_flows.csv";
         File maliciousCsv = new File(maliciousCsvPath);
-        boolean headerWritten = maliciousCsv.exists();
-        if (!headerWritten) {
+        if (!maliciousCsv.exists()) {
             try (PrintWriter pw = new PrintWriter(new FileWriter(maliciousCsv, true))) {
                 pw.println("duration,total_pkts,total_bytes,mean_pkt_len,pkt_rate,protocol");
             }
@@ -44,7 +43,6 @@ public class Main {
                                features[3] + "," + features[4] + "," + features[5]);
                 }
             } else {
-                logger.logAlert("Normal flow: " + Arrays.toString(features));
                 System.out.println("Normal flow: " + Arrays.toString(features));
             }
         }
