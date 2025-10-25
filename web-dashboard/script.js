@@ -14,84 +14,90 @@ const flowChart = new Chart(ctx, {
         labels: ['Malicious Flows', 'Normal Flows', 'Total Scanned'],
         datasets: [{
             label: 'Flow Count',
-            data: [0, 0, 0],
-            backgroundColor: ['rgba(255,99,132,0.8)','rgba(75,192,75,0.8)','rgba(54,162,235,0.8)'],
-            borderColor: ['#ff4d4d','#32cd32','#36a2eb'], borderWidth: 1, borderRadius: 6
+            data: [0,0,0],
+            backgroundColor:['rgba(255,99,132,0.8)','rgba(75,192,75,0.8)','rgba(54,162,235,0.8)'],
+            borderColor:['#ff4d4d','#32cd32','#36a2eb'], borderWidth:1, borderRadius:6
         }]
     },
-    options: { responsive:true, animation:{duration:800,easing:'easeOutCubic'},
-        scales:{y:{beginAtZero:true,ticks:{color:'#000'},grid:{color:'rgba(0,0,0,0.1)'}},
-                x:{ticks:{color:'#000'},grid:{color:'rgba(0,0,0,0.05)'}}},
-        plugins:{legend:{labels:{color:'#000', font:{size:13, weight:'500'}}}}
+    options:{ responsive:true, animation:{duration:800,easing:'easeOutCubic'},
+        scales:{ y:{beginAtZero:true,ticks:{color:'#000'},grid:{color:'rgba(0,0,0,0.1)'}},
+                 x:{ticks:{color:'#000'},grid:{color:'rgba(0,0,0,0.05)'}} },
+        plugins:{ legend:{labels:{color:'#000', font:{size:13, weight:'500'}}} }
     }
 });
 
 const lineChart = new Chart(lineCtx, {
     type: 'line',
-    data: { labels: [], datasets:[
+    data:{ labels:[], datasets:[
         { label:'Malicious', data:[], borderColor:'#ff4d4d', backgroundColor:'rgba(255,99,132,0.2)', tension:0.3 },
         { label:'Normal', data:[], borderColor:'#32cd32', backgroundColor:'rgba(75,192,75,0.2)', tension:0.3 }
     ]},
-    options:{responsive:true, animation:{duration:800, easing:'easeOutCubic'},
-        scales:{y:{beginAtZero:true},x:{}}, plugins:{legend:{labels:{font:{size:12}}}}
-    }
+    options:{ responsive:true, animation:{duration:800,easing:'easeOutCubic'}, scales:{y:{beginAtZero:true}}, plugins:{legend:{labels:{font:{size:12}}}} }
 });
 
-async function fetchFlows() {
-    try {
-        const response = await fetch('http://127.0.0.1:5000/get_flows');
-        const data = await response.json();
-        const flows = data.flows || [];
-        allFlows = allFlows.concat(flows.slice(displayedIndex));
+async function insertFlow(flow){
+    const flowsTable = document.querySelector('#flows-table tbody');
+    const alertsList = document.querySelector('#alerts-list');
 
-        const flowsTable = document.querySelector('#flows-table tbody');
-        const alertsList = document.querySelector('#alerts-list');
+    const tr = document.createElement('tr');
+    tr.className = flow.prediction===1?'malicious new-flow':'normal new-flow';
+    tr.innerHTML = `
+        <td>${flow.duration}</td>
+        <td>${flow.total_pkts}</td>
+        <td>${flow.total_bytes}</td>
+        <td>${flow.mean_pkt_len}</td>
+        <td>${flow.pkt_rate}</td>
+        <td>${flow.protocol}</td>
+        <td>${flow.prediction===1?'Malicious':'Normal'}</td>
+    `;
+    flowsTable.appendChild(tr);
+    flowsTable.parentElement.scrollTop = flowsTable.parentElement.scrollHeight;
 
-        for (let i = displayedIndex; i < allFlows.length; i++) {
-            const flow = allFlows[i];
-            const tr = document.createElement('tr');
-            tr.className = flow.prediction === 1 ? 'malicious new-flow' : 'normal new-flow';
-            tr.innerHTML = `
-                <td>${flow.duration}</td>
-                <td>${flow.total_pkts}</td>
-                <td>${flow.total_bytes}</td>
-                <td>${flow.mean_pkt_len}</td>
-                <td>${flow.pkt_rate}</td>
-                <td>${flow.protocol}</td>
-                <td>${flow.prediction===1?'Malicious':'Normal'}</td>
-            `;
-            flowsTable.appendChild(tr);
-            flowsTable.parentElement.scrollTop = flowsTable.parentElement.scrollHeight;
+    if(flow.prediction===1){
+        maliciousCount++;
+        const li = document.createElement('li');
+        li.textContent = `⚠️ Malicious flow detected: duration=${flow.duration}, pkts=${flow.total_pkts}, bytes=${flow.total_bytes}`;
+        alertsList.appendChild(li);
+        alertsList.scrollTop = alertsList.scrollHeight;
+    } else normalCount++;
 
-            if(flow.prediction===1){
-                maliciousCount++;
-                const li = document.createElement('li');
-                li.textContent = `⚠️ Malicious flow detected: duration=${flow.duration}, pkts=${flow.total_pkts}, bytes=${flow.total_bytes}`;
-                alertsList.appendChild(li);
-                alertsList.scrollTop = alertsList.scrollHeight;
-            } else normalCount++;
+    cumulativeData.push({malicious:maliciousCount, normal:normalCount});
+    updateSummary();
+    updateCharts();
 
-            cumulativeData.push({malicious:maliciousCount, normal:normalCount});
-            displayedIndex++;
-        }
-        updateSummary();
-        updateCharts();
-        applyFilter(currentFilter);
-    } catch(err){ console.error('Error fetching flows:', err);}
+    await new Promise(resolve => setTimeout(resolve, 200)); // simulate real-time flow
 }
 
-function updateSummary() {
+async function processNewFlows(flows){
+    for(let i=displayedIndex;i<flows.length;i++){
+        await insertFlow(flows[i]);
+        displayedIndex++;
+    }
+}
+
+async function fetchFlows(){
+    try{
+        const response = await fetch('http://127.0.0.1:5000/get_flows');
+        const data = await response.json();
+        const flows = data.flows||[];
+        allFlows = allFlows.concat(flows.slice(displayedIndex));
+        await processNewFlows(allFlows);
+        applyFilter(currentFilter);
+    }catch(err){ console.error('Error fetching flows:', err); }
+}
+
+function updateSummary(){
     const totalFlows = maliciousCount+normalCount;
-    document.querySelector('#alerts-summary').innerHTML = `
+    document.querySelector('#alerts-summary').innerHTML=`
         <li>Total Flows Scanned: <strong>${totalFlows}</strong></li>
         <li style="color:#ff4d4d;">Malicious Flows: <strong>${maliciousCount}</strong></li>
         <li style="color:#32cd32;">Normal Flows: <strong>${normalCount}</strong></li>
     `;
 }
 
-function updateCharts() {
+function updateCharts(){
     const totalFlows = maliciousCount+normalCount;
-    flowChart.data.datasets[0].data = [maliciousCount, normalCount, totalFlows];
+    flowChart.data.datasets[0].data=[maliciousCount, normalCount, totalFlows];
     flowChart.update();
 
     lineChart.data.labels = cumulativeData.map((_,i)=>i+1);
@@ -104,19 +110,19 @@ const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click',()=>{
     document.body.classList.toggle('dark-theme');
     document.body.classList.toggle('light-theme');
-    themeToggle.textContent = document.body.classList.contains('dark-theme')?'☀️ Light Mode':'🌙 Dark Mode';
-    const isDark = document.body.classList.contains('dark-theme');
+    themeToggle.textContent=document.body.classList.contains('dark-theme')?'☀️ Light Mode':'🌙 Dark Mode';
+    const isDark=document.body.classList.contains('dark-theme');
     [flowChart,lineChart].forEach(c=>{
-        c.options.plugins.legend.labels.color = isDark?'#fff':'#000';
-        c.options.scales.y.ticks.color = isDark?'#fff':'#000';
-        c.options.scales.x.ticks.color = isDark?'#fff':'#000';
+        c.options.plugins.legend.labels.color=isDark?'#fff':'#000';
+        c.options.scales.y.ticks.color=isDark?'#fff':'#000';
+        c.options.scales.x.ticks.color=isDark?'#fff':'#000';
         c.update();
     });
 });
 
 document.getElementById('clear-alerts').addEventListener('click',()=>{ document.getElementById('alerts-list').innerHTML=''; });
 
-let currentFilter = 'all';
+let currentFilter='all';
 document.querySelectorAll('.filter-buttons button').forEach(btn=>{
     btn.addEventListener('click',()=>{
         currentFilter=btn.dataset.filter;
@@ -135,13 +141,13 @@ function applyFilter(filter){
 }
 
 document.getElementById('export-csv').addEventListener('click',()=>{
-    let csv = 'Duration,Total Packets,Total Bytes,Mean Packet Length,Packet Rate,Protocol,Prediction\n';
+    let csv='Duration,Total Packets,Total Bytes,Mean Packet Length,Packet Rate,Protocol,Prediction\n';
     allFlows.forEach(f=>{
-        csv += `${f.duration},${f.total_pkts},${f.total_bytes},${f.mean_pkt_len},${f.pkt_rate},${f.protocol},${f.prediction===1?'Malicious':'Normal'}\n`;
+        csv+=`${f.duration},${f.total_pkts},${f.total_bytes},${f.mean_pkt_len},${f.pkt_rate},${f.protocol},${f.prediction===1?'Malicious':'Normal'}\n`;
     });
-    const blob = new Blob([csv],{type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
     a.href=url; a.download='flows.csv';
     a.click();
     URL.revokeObjectURL(url);
