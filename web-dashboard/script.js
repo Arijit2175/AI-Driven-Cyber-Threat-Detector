@@ -2,6 +2,7 @@ const DELAY_MS = 2500;
 let displayedIndex = 0;
 let maliciousCount = 0;
 let normalCount = 0;
+let allFlows = [];
 
 const ctx = document.getElementById('flowChart').getContext('2d');
 const flowChart = new Chart(ctx, {
@@ -39,13 +40,14 @@ async function fetchFlows() {
         const response = await fetch('http://127.0.0.1:5000/get_flows');
         const data = await response.json();
         const flows = data.flows || [];
+        allFlows = allFlows.concat(flows.slice(displayedIndex));
 
         const flowsTable = document.querySelector('#flows-table tbody');
         const alertsList = document.querySelector('#alerts-list');
         const alertsSummary = document.querySelector('#alerts-summary');
 
-        for (let i = displayedIndex; i < flows.length; i++) {
-            const flow = flows[i];
+        for (let i = displayedIndex; i < allFlows.length; i++) {
+            const flow = allFlows[i];
 
             const tr = document.createElement('tr');
             tr.className = flow.prediction === 1 ? 'malicious new-flow' : 'normal new-flow';
@@ -66,35 +68,40 @@ async function fetchFlows() {
                 const li = document.createElement('li');
                 li.textContent = `⚠️ Malicious flow detected: duration=${flow.duration}, pkts=${flow.total_pkts}, bytes=${flow.total_bytes}`;
                 alertsList.appendChild(li);
-                alertsList.scrollTop = alertsList.scrollHeight; 
+                alertsList.scrollTop = alertsList.scrollHeight;
             } else normalCount++;
 
             displayedIndex++;
-
-            const totalFlows = maliciousCount + normalCount;
-            alertsSummary.innerHTML = `
-                <li>Total Flows Scanned: <strong>${totalFlows}</strong></li>
-                <li style="color:#ff4d4d;">Malicious Flows: <strong>${maliciousCount}</strong></li>
-                <li style="color:#32cd32;">Normal Flows: <strong>${normalCount}</strong></li>
-            `;
-
-            flowChart.data.datasets[0].data = [maliciousCount, normalCount, totalFlows];
-            flowChart.update();
-
-            await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         }
+
+        updateSummary();
+        updateChart();
+        applyFilter(currentFilter);
     } catch (err) {
         console.error('Error fetching flows:', err);
     }
+}
+
+function updateSummary() {
+    const totalFlows = maliciousCount + normalCount;
+    document.querySelector('#alerts-summary').innerHTML = `
+        <li>Total Flows Scanned: <strong>${totalFlows}</strong></li>
+        <li style="color:#ff4d4d;">Malicious Flows: <strong>${maliciousCount}</strong></li>
+        <li style="color:#32cd32;">Normal Flows: <strong>${normalCount}</strong></li>
+    `;
+}
+
+function updateChart() {
+    const totalFlows = maliciousCount + normalCount;
+    flowChart.data.datasets[0].data = [maliciousCount, normalCount, totalFlows];
+    flowChart.update();
 }
 
 const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     document.body.classList.toggle('light-theme');
-    themeToggle.textContent = document.body.classList.contains('dark-theme')
-        ? '☀️ Light Mode'
-        : '🌙 Dark Mode';
+    themeToggle.textContent = document.body.classList.contains('dark-theme') ? '☀️ Light Mode' : '🌙 Dark Mode';
 
     const isDark = document.body.classList.contains('dark-theme');
     flowChart.options.plugins.legend.labels.color = isDark ? '#fff' : '#000';
@@ -102,6 +109,29 @@ themeToggle.addEventListener('click', () => {
     flowChart.options.scales.x.ticks.color = isDark ? '#fff' : '#000';
     flowChart.update();
 });
+
+document.getElementById('clear-alerts').addEventListener('click', () => {
+    document.getElementById('alerts-list').innerHTML = '';
+});
+
+let currentFilter = 'all';
+document.querySelectorAll('.filter-buttons button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilter(currentFilter);
+    });
+});
+
+function applyFilter(filter) {
+    const rows = document.querySelectorAll('#flows-table tbody tr');
+    rows.forEach(row => {
+        if (filter === 'all') row.style.display = '';
+        else if (filter === 'malicious') row.style.display = row.classList.contains('malicious') ? '' : 'none';
+        else if (filter === 'normal') row.style.display = row.classList.contains('normal') ? '' : 'none';
+    });
+}
 
 setInterval(fetchFlows, DELAY_MS);
 fetchFlows();
