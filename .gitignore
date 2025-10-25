@@ -5,3 +5,4 @@ __pycache__/
 *.jar
 *.class
 .vscode/
+.fake
