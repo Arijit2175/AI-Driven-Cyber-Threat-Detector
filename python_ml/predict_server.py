@@ -66,6 +66,24 @@ def predict():
 
     return jsonify({"error": "Invalid payload. Use 'features' (single) or 'flows' (batch)."}), 400
 
+@app.route('/update_flows', methods=['POST'])
+def update_flows():
+    """
+    Java client posts processed flow results here:
+    [
+      {"duration":.., "total_pkts":.., "total_bytes":.., "mean_pkt_len":.., "pkt_rate":.., "protocol":.., "prediction":..},
+      ...
+    ]
+    """
+    global latest_flows
+    try:
+        data = request.get_json(force=True)
+        if not isinstance(data, list):
+            return jsonify({"error": "Expected a list of flow objects"}), 400
+        latest_flows = data[-100:] 
+        return jsonify({"status": "ok", "count": len(latest_flows)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route('/get_flows', methods=['GET'])
 def get_flows():

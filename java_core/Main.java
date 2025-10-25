@@ -1,5 +1,7 @@
 import java.io.*;
+import java.net.*;
 import java.util.*;
+import com.google.gson.*; 
 
 public class Main {
 
@@ -48,6 +50,45 @@ public class Main {
                 logger.logAlert("Normal flow: " + Arrays.toString(features));
                 System.out.println("Normal flow: " + Arrays.toString(features));
             }
+        }
+
+        List<Map<String, Object>> resultPayload = new ArrayList<>();
+        for (int i = 0; i < featureList.size(); i++) {
+            double[] f = featureList.get(i);
+            int pred = preds.get(i);
+
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("duration", f[0]);
+            entry.put("total_pkts", f[1]);
+            entry.put("total_bytes", f[2]);
+            entry.put("mean_pkt_len", f[3]);
+            entry.put("pkt_rate", f[4]);
+            entry.put("protocol", f[5]);
+            entry.put("prediction", pred);
+
+            resultPayload.add(entry);
+        }
+
+        try {
+            URL updateUrl = new URL("http://127.0.0.1:5000/update_flows");
+            HttpURLConnection conn = (HttpURLConnection) updateUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            conn.setDoOutput(true);
+
+            Gson gson = new Gson();
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = gson.toJson(resultPayload).getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200)
+                System.out.println("✅ Flow data sent to dashboard successfully.");
+            else
+                System.out.println("⚠️ Failed to update dashboard. HTTP " + responseCode);
+        } catch (Exception e) {
+            System.err.println("Error sending data to dashboard: " + e.getMessage());
         }
 
         System.out.println("Detection complete. Alerts logged to " + logFile.getAbsolutePath());
