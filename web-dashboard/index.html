@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Network Threat Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>AI-Driven Cyber Threat Detector</h1>
+
+    <div id="alerts-container">
+        <h2>Alerts</h2>
+        <ul id="alerts-list"></ul>
+    </div>
+
+    <div id="flows-container">
+        <h2>All Flows</h2>
+        <table id="flows-table">
+            <thead>
+                <tr>
+                    <th>Duration</th>
+                    <th>Total Packets</th>
+                    <th>Total Bytes</th>
+                    <th>Mean Packet Length</th>
+                    <th>Packet Rate</th>
+                    <th>Protocol</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
