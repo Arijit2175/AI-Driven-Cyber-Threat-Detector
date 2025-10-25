@@ -9,12 +9,21 @@ async function fetchFlows() {
 
         const flowsTable = document.querySelector('#flows-table tbody');
         const alertsList = document.querySelector('#alerts-list');
+        const alertsSummary = document.querySelector('#alerts-summary');
+
+        let maliciousCount = 0;
+        let normalCount = 0;
+
+        document.querySelectorAll('#flows-table tbody tr').forEach(row => {
+            if (row.classList.contains('malicious')) maliciousCount++;
+            else if (row.classList.contains('normal')) normalCount++;
+        });
 
         for (let i = displayedIndex; i < flows.length; i++) {
             const flow = flows[i];
 
             const tr = document.createElement('tr');
-            tr.className = flow.prediction === 1 ? 'malicious new-flow' : 'new-flow';
+            tr.className = flow.prediction === 1 ? 'malicious new-flow' : 'normal new-flow';
             tr.innerHTML = `
                 <td>${flow.duration}</td>
                 <td>${flow.total_pkts}</td>
@@ -29,12 +38,23 @@ async function fetchFlows() {
             flowsTable.parentElement.scrollTop = flowsTable.parentElement.scrollHeight;
 
             if (flow.prediction === 1) {
+                maliciousCount++;
                 const li = document.createElement('li');
-                li.textContent = `Malicious flow detected: ${flow.duration}, ${flow.total_pkts}, ${flow.total_bytes}, ...`;
+                li.textContent = `⚠️ Malicious flow detected: duration=${flow.duration}, pkts=${flow.total_pkts}, bytes=${flow.total_bytes}`;
                 alertsList.appendChild(li);
+            } else {
+                normalCount++;
             }
 
             displayedIndex++;
+
+            const totalFlows = maliciousCount + normalCount;
+            alertsSummary.innerHTML = `
+                <li>Total Flows Scanned: <strong>${totalFlows}</strong></li>
+                <li style="color:#ff4d4d;">Malicious Flows: <strong>${maliciousCount}</strong></li>
+                <li style="color:#32cd32;">Normal Flows: <strong>${normalCount}</strong></li>
+            `;
+
             await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         }
     } catch (err) {
@@ -46,7 +66,9 @@ const themeToggle = document.getElementById('theme-toggle');
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     document.body.classList.toggle('light-theme');
-    themeToggle.textContent = document.body.classList.contains('dark-theme') ? '☀️ Light Mode' : '🌙 Dark Mode';
+    themeToggle.textContent = document.body.classList.contains('dark-theme')
+        ? '☀️ Light Mode'
+        : '🌙 Dark Mode';
 });
 
 setInterval(fetchFlows, DELAY_MS);
