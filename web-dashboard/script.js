@@ -1,6 +1,4 @@
-async function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+let lastIndex = 0; 
 
 async function fetchFlows() {
     try {
@@ -10,11 +8,8 @@ async function fetchFlows() {
         const flowsTable = document.querySelector('#flows-table tbody');
         const alertsList = document.querySelector('#alerts-list');
 
-        flowsTable.innerHTML = '';
-        alertsList.innerHTML = '';
-
-        for (let i = 0; i < data.length; i++) {
-            const flow = data[i];
+        for (let i = lastIndex; i < data.flows.length; i++) {
+            const flow = data.flows[i];
 
             const tr = document.createElement('tr');
             tr.className = flow.prediction === 1 ? 'malicious' : '';
@@ -35,12 +30,14 @@ async function fetchFlows() {
                 alertsList.appendChild(li);
             }
 
-            await sleep(200); 
+            lastIndex++; 
+
+            await new Promise(resolve => setTimeout(resolve, 2500));
         }
     } catch (err) {
         console.error('Error fetching flows:', err);
     }
 }
 
-setInterval(fetchFlows, 5000);
+setInterval(fetchFlows, 1000);
 fetchFlows();
