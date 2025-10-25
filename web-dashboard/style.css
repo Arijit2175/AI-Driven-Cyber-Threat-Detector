@@ -149,3 +149,8 @@ tr.new-flow {
     background-color: #555;
     border-radius: 3px;
 }
+
+#flows-table tr.normal {
+    background-color: #b2f2bb; 
+    color: #000;
+}
