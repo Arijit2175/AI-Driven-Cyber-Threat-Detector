@@ -8,13 +8,11 @@ public class Main {
         String csvFile = "../datasets/sample_traffic.csv";
         String serverUrl = "http://127.0.0.1:5000/predict";
 
-        File logsFolder = new File("../logs"); 
+        File logsFolder = new File("../logs");
         if (!logsFolder.exists()) logsFolder.mkdirs();
 
         File logFile = new File(logsFolder, "alerts.log");
-
         AlertLogger logger = new AlertLogger(logFile.getAbsolutePath());
-
         logger.logAlert("=== New detection session started ===");
 
         File maliciousCsv = new File(logsFolder, "malicious_flows.csv");
@@ -28,20 +26,27 @@ public class Main {
         ThreatDetector detector = new ThreatDetector(serverUrl);
 
         List<Map<String, String>> flows = capture.readFlows();
-
+        List<double[]> featureList = new ArrayList<>(flows.size());
         for (Map<String, String> flowMap : flows) {
             double[] features = FeatureExtractor.extractFeatures(flowMap);
-            int prediction = detector.predict(features);
+            featureList.add(features);
+        }
+
+        List<Integer> preds = detector.predictBatch(featureList);
+
+        for (int i = 0; i < featureList.size(); i++) {
+            double[] features = featureList.get(i);
+            int prediction = preds.get(i);
 
             if (prediction == 1) {
                 logger.logAlert("Malicious flow detected: " + Arrays.toString(features));
                 System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
-
                 try (PrintWriter pw = new PrintWriter(new FileWriter(maliciousCsv, true))) {
                     pw.println(features[0] + "," + features[1] + "," + features[2] + "," +
                                features[3] + "," + features[4] + "," + features[5]);
                 }
             } else {
+                logger.logAlert("Normal flow: " + Arrays.toString(features));
                 System.out.println("Normal flow: " + Arrays.toString(features));
             }
         }
