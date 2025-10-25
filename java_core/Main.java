@@ -27,10 +27,9 @@ public class Main {
 
         List<Map<String, String>> flows = capture.readFlows();
         List<double[]> featureList = new ArrayList<>(flows.size());
-        for (Map<String, String> flowMap : flows) {
-            double[] features = FeatureExtractor.extractFeatures(flowMap);
-            featureList.add(features);
-        }
+
+        for (Map<String, String> flowMap : flows)
+            featureList.add(FeatureExtractor.extractFeatures(flowMap));
 
         List<Integer> preds = detector.predictBatch(featureList);
 
