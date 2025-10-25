@@ -5,7 +5,7 @@
     <title>AI Cyber Threat Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="light-theme">
     <div class="dashboard-container">
         <aside class="sidebar">
             <h2>Alerts</h2>
@@ -13,7 +13,10 @@
         </aside>
 
         <main class="main-content">
-            <h1>Network Flows</h1>
+            <div class="header">
+                <h1>Network Flows</h1>
+                <button id="theme-toggle">🌙 Dark Mode</button>
+            </div>
             <div class="table-container">
                 <table id="flows-table">
                     <thead>
@@ -28,7 +31,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        
+                       
                     </tbody>
                 </table>
             </div>
