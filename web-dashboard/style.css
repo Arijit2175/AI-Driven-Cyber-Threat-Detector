@@ -203,3 +203,42 @@ tr.new-flow {
     background-color: #555;
     border-radius: 3px;
 }
+
+.filter-buttons {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.filter-buttons button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #36a2eb;
+    color: white;
+    font-size: 0.85em;
+    transition: background-color 0.3s;
+}
+
+.filter-buttons button.active {
+    background-color: #1f2a38;
+}
+
+#clear-alerts {
+    padding: 6px 10px;
+    width: 100%;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #ff4d4d;
+    color: white;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+}
+
+#clear-alerts:hover {
+    background-color: #e60000;
+}
