@@ -8,17 +8,16 @@ public class Main {
         String csvFile = "../datasets/sample_traffic.csv";
         String serverUrl = "http://127.0.0.1:5000/predict";
 
-        String logsFolderPath = System.getProperty("user.dir") + File.separator + ".." + File.separator + "logs";
-        File logsFolder = new File(logsFolderPath);
+        File logsFolder = new File("../logs"); 
         if (!logsFolder.exists()) logsFolder.mkdirs();
 
-        String logFilePath = logsFolderPath + File.separator + "alerts.log";
-        AlertLogger logger = new AlertLogger(logFilePath);
+        File logFile = new File(logsFolder, "alerts.log");
+
+        AlertLogger logger = new AlertLogger(logFile.getAbsolutePath());
 
         logger.logAlert("=== New detection session started ===");
 
-        String maliciousCsvPath = logsFolderPath + File.separator + "malicious_flows.csv";
-        File maliciousCsv = new File(maliciousCsvPath);
+        File maliciousCsv = new File(logsFolder, "malicious_flows.csv");
         if (!maliciousCsv.exists()) {
             try (PrintWriter pw = new PrintWriter(new FileWriter(maliciousCsv, true))) {
                 pw.println("duration,total_pkts,total_bytes,mean_pkt_len,pkt_rate,protocol");
@@ -47,7 +46,7 @@ public class Main {
             }
         }
 
-        System.out.println("Detection complete. Alerts logged to " + logFilePath);
-        System.out.println("Malicious flows saved to " + maliciousCsvPath);
+        System.out.println("Detection complete. Alerts logged to " + logFile.getAbsolutePath());
+        System.out.println("Malicious flows saved to " + maliciousCsv.getAbsolutePath());
     }
 }
