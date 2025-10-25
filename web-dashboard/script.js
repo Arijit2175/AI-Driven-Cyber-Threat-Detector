@@ -1,18 +1,20 @@
-let lastIndex = 0; 
+const DELAY_MS = 2500; 
+let displayedIndex = 0; 
 
 async function fetchFlows() {
     try {
         const response = await fetch('http://127.0.0.1:5000/get_flows');
         const data = await response.json();
+        const flows = data.flows || [];
 
         const flowsTable = document.querySelector('#flows-table tbody');
         const alertsList = document.querySelector('#alerts-list');
 
-        for (let i = lastIndex; i < data.flows.length; i++) {
-            const flow = data.flows[i];
+        for (let i = displayedIndex; i < flows.length; i++) {
+            const flow = flows[i];
 
             const tr = document.createElement('tr');
-            tr.className = flow.prediction === 1 ? 'malicious' : '';
+            tr.className = flow.prediction === 1 ? 'malicious new-flow' : 'new-flow';
             tr.innerHTML = `
                 <td>${flow.duration}</td>
                 <td>${flow.total_pkts}</td>
@@ -24,20 +26,21 @@ async function fetchFlows() {
             `;
             flowsTable.appendChild(tr);
 
+            flowsTable.parentElement.scrollTop = flowsTable.parentElement.scrollHeight;
+
             if (flow.prediction === 1) {
                 const li = document.createElement('li');
                 li.textContent = `Malicious flow detected: ${flow.duration}, ${flow.total_pkts}, ${flow.total_bytes}, ...`;
                 alertsList.appendChild(li);
             }
 
-            lastIndex++; 
-
-            await new Promise(resolve => setTimeout(resolve, 2500));
+            displayedIndex++;
+            await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         }
     } catch (err) {
         console.error('Error fetching flows:', err);
     }
 }
 
-setInterval(fetchFlows, 1000);
+setInterval(fetchFlows, DELAY_MS);
 fetchFlows();
