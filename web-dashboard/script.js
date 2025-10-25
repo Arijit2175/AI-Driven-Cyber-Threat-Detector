@@ -1,7 +1,8 @@
 async function fetchFlows() {
     try {
         const response = await fetch('http://127.0.0.1:5000/get_flows');
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.flows;  
 
         const flowsTable = document.querySelector('#flows-table tbody');
         const alertsList = document.querySelector('#alerts-list');
@@ -36,3 +37,4 @@ async function fetchFlows() {
 
 setInterval(fetchFlows, 2000);
 fetchFlows();
+
