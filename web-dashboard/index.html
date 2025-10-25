@@ -7,21 +7,16 @@
 </head>
 <body class="light-theme">
     <div class="dashboard-container">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>Alerts</h2>
-                <button id="toggle-sidebar">⬅️</button>
-            </div>
-
+        <aside class="sidebar">
+            <button id="sidebar-toggle">☰</button>
+            <h2>Alerts</h2>
             <ul id="alerts-summary" class="alerts-summary">
                 <li>Total Flows Scanned: <strong>0</strong></li>
                 <li style="color:#ff4d4d;">Malicious Flows: <strong>0</strong></li>
                 <li style="color:#32cd32;">Normal Flows: <strong>0</strong></li>
             </ul>
-
             <button id="clear-alerts">Clear Alerts</button>
             <button id="export-csv">Export CSV</button>
-
             <hr style="margin:10px 0; border: none; border-top: 1px solid #444;">
             <ul id="alerts-list"></ul>
         </aside>
@@ -55,15 +50,11 @@
                     </table>
                 </div>
 
-                <div class="charts-container">
-                    <div class="chart-section">
-                        <h3>Flow Status Chart</h3>
-                        <canvas id="flowChart"></canvas>
-                    </div>
-                    <div class="chart-section">
-                        <h3>Flow Trend (Line Chart)</h3>
-                        <canvas id="lineChart"></canvas>
-                    </div>
+                <div class="chart-section">
+                    <h3>Flow Status Chart</h3>
+                    <canvas id="flowChart"></canvas>
+                    <h3>Cumulative Flows Over Time</h3>
+                    <canvas id="lineChart"></canvas>
                 </div>
             </div>
         </main>
