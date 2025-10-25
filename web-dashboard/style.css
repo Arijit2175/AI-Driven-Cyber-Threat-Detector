@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+#flows-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#flows-table th, #flows-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+}
+
+#flows-table tr.malicious {
+    background-color: #ffb3b3;
+}
+
+#alerts-container ul {
+    list-style-type: none;
+    padding: 0;
+}
