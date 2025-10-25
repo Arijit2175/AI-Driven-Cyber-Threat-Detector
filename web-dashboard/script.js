@@ -13,22 +13,38 @@ const flowChart = new Chart(ctx, {
             label: 'Flow Count',
             data: [0, 0, 0],
             backgroundColor: [
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(75, 192, 75, 0.7)',
-                'rgba(54, 162, 235, 0.7)'
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(75, 192, 75, 0.8)',
+                'rgba(54, 162, 235, 0.8)'
             ],
             borderColor: ['#ff4d4d', '#32cd32', '#36a2eb'],
-            borderWidth: 1
+            borderWidth: 1,
+            borderRadius: 6,
         }]
     },
     options: {
         responsive: true,
+        animation: {
+            duration: 800,   
+            easing: 'easeOutCubic'
+        },
         scales: {
-            y: { beginAtZero: true }
+            y: {
+                beginAtZero: true,
+                ticks: { color: '#000' },
+                grid: { color: 'rgba(0, 0, 0, 0.1)' }
+            },
+            x: {
+                ticks: { color: '#000' },
+                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+            }
         },
         plugins: {
             legend: {
-                labels: { color: '#000' }
+                labels: {
+                    color: '#000',
+                    font: { size: 13, weight: '500' }
+                }
             }
         }
     }
