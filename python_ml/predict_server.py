@@ -8,7 +8,7 @@ MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
 FRONTEND_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'web-dashboard')
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=FRONTEND_FOLDER, static_url_path='')
 
 model = joblib.load(MODEL_FILE)
 scaler = joblib.load(SCALER_FILE)
