@@ -1,5 +1,5 @@
-const DELAY_MS = 2500; 
-let displayedIndex = 0; 
+const DELAY_MS = 2500;
+let displayedIndex = 0;
 
 async function fetchFlows() {
     try {
@@ -41,6 +41,13 @@ async function fetchFlows() {
         console.error('Error fetching flows:', err);
     }
 }
+
+const themeToggle = document.getElementById('theme-toggle');
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    document.body.classList.toggle('light-theme');
+    themeToggle.textContent = document.body.classList.contains('dark-theme') ? '☀️ Light Mode' : '🌙 Dark Mode';
+});
 
 setInterval(fetchFlows, DELAY_MS);
 fetchFlows();
