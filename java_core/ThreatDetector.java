@@ -23,17 +23,13 @@ public class ThreatDetector {
         payload.put("features", features);
 
         try (OutputStream os = conn.getOutputStream()) {
-            byte[] input = gson.toJson(payload).getBytes("utf-8");
-            os.write(input, 0, input.length);
+            os.write(gson.toJson(payload).getBytes("utf-8"));
         }
 
         try (InputStreamReader reader = new InputStreamReader(conn.getInputStream(), "utf-8")) {
             JsonObject response = gson.fromJson(reader, JsonObject.class);
-            if (response.has("prediction")) {
-                return response.get("prediction").getAsInt();
-            } else {
-                throw new IOException("Unexpected response (no 'prediction') from server: " + response.toString());
-            }
+            if (response.has("prediction")) return response.get("prediction").getAsInt();
+            else throw new IOException("No 'prediction' in response: " + response);
         }
     }
 
@@ -60,20 +56,16 @@ public class ThreatDetector {
         payload.put("flows", jsonFlows);
 
         try (OutputStream os = conn.getOutputStream()) {
-            byte[] input = gson.toJson(payload).getBytes("utf-8");
-            os.write(input, 0, input.length);
+            os.write(gson.toJson(payload).getBytes("utf-8"));
         }
 
         try (InputStreamReader reader = new InputStreamReader(conn.getInputStream(), "utf-8")) {
             JsonObject response = gson.fromJson(reader, JsonObject.class);
-            if (response.has("predictions")) {
-                JsonArray arr = response.getAsJsonArray("predictions");
-                List<Integer> out = new ArrayList<>();
-                for (JsonElement e : arr) out.add(e.getAsInt());
-                return out;
-            } else {
-                throw new IOException("Unexpected response (no 'predictions') from server: " + response.toString());
-            }
+            if (!response.has("predictions")) throw new IOException("No 'predictions' in response: " + response);
+
+            List<Integer> out = new ArrayList<>();
+            for (JsonElement e : response.getAsJsonArray("predictions")) out.add(e.getAsInt());
+            return out;
         }
     }
 }
