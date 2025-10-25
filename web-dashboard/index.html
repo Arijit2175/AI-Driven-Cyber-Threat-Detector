@@ -14,6 +14,7 @@
                 <li style="color:#ff4d4d;">Malicious Flows: <strong>0</strong></li>
                 <li style="color:#32cd32;">Normal Flows: <strong>0</strong></li>
             </ul>
+            <button id="clear-alerts">Clear Alerts</button>
             <hr style="margin:10px 0; border: none; border-top: 1px solid #444;">
             <ul id="alerts-list"></ul>
         </aside>
@@ -26,6 +27,11 @@
 
             <div class="data-section">
                 <div class="table-container">
+                    <div class="filter-buttons">
+                        <button data-filter="all" class="active">All</button>
+                        <button data-filter="malicious">Malicious</button>
+                        <button data-filter="normal">Normal</button>
+                    </div>
                     <table id="flows-table">
                         <thead>
                             <tr>
