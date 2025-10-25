@@ -9,6 +9,15 @@
     <div class="dashboard-container">
         <aside class="sidebar">
             <h2>Alerts</h2>
+
+            <ul id="alerts-summary" class="alerts-summary">
+                <li>Total Flows Scanned: <strong>0</strong></li>
+                <li style="color:#ff4d4d;">Malicious Flows: <strong>0</strong></li>
+                <li style="color:#32cd32;">Normal Flows: <strong>0</strong></li>
+            </ul>
+
+            <hr style="margin:10px 0; border: none; border-top: 1px solid #444;">
+
             <ul id="alerts-list"></ul>
         </aside>
 
@@ -17,6 +26,7 @@
                 <h1>Network Flows</h1>
                 <button id="theme-toggle">🌙 Dark Mode</button>
             </div>
+
             <div class="table-container">
                 <table id="flows-table">
                     <thead>
@@ -31,12 +41,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                       
+                        
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
