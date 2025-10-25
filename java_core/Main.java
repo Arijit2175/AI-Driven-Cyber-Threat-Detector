@@ -1,43 +1,51 @@
-import java.io.File;
+import java.io.*;
 import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
-
-        String csvFile = ".." + File.separator + "datasets" + File.separator + "sample_traffic.csv";
+        String datasetFolder = "../datasets"; 
         String serverUrl = "http://127.0.0.1:5000/predict";
+        String outputCsv = "../datasets/malicious_flows.csv";
 
-        String projectRoot = new File(".").getCanonicalFile().getParent();
-        System.out.println("Project root: " + projectRoot);
+        File outFile = new File(outputCsv);
+        try (PrintWriter writer = new PrintWriter(new FileWriter(outFile))) {
+            writer.println("duration,total_pkts,total_bytes,mean_pkt_len,pkt_rate,protocol"); // CSV header
+        }
 
-        String logFolderPath = projectRoot + File.separator + "logs";
-        File logFolder = new File(logFolderPath);
-        if (!logFolder.exists()) logFolder.mkdirs();
+        File folder = new File(datasetFolder);
+        File[] csvFiles = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".csv"));
 
-        String logFilePath = logFolderPath + File.separator + "alerts.log";
-        System.out.println("Log file path: " + logFilePath);
+        if (csvFiles == null || csvFiles.length == 0) {
+            System.out.println("No CSV files found in " + datasetFolder);
+            return;
+        }
 
-        AlertLogger logger = new AlertLogger(logFilePath);
-        logger.logAlert("=== New detection session started ===");
-
-        PacketCapture capture = new PacketCapture(csvFile);
+        PacketCapture capture;
         ThreatDetector detector = new ThreatDetector(serverUrl);
 
-        List<Map<String, String>> flows = capture.readFlows();
+        for (File csvFile : csvFiles) {
+            System.out.println("Processing file: " + csvFile.getName());
+            capture = new PacketCapture(csvFile.getAbsolutePath());
+            List<Map<String, String>> flows = capture.readFlows();
 
-        for (Map<String, String> flowMap : flows) {
-            double[] features = FeatureExtractor.extractFeatures(flowMap);
-            int prediction = detector.predict(features);
+            for (Map<String, String> flowMap : flows) {
+                double[] features = FeatureExtractor.extractFeatures(flowMap);
+                int prediction = detector.predict(features);
 
-            if (prediction == 1) {
-                logger.logAlert("Malicious flow detected: " + Arrays.toString(features));
-                System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
-            } else {
-                System.out.println("Normal flow: " + Arrays.toString(features));
+                if (prediction == 1) {
+                    System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
+                    try (PrintWriter writer = new PrintWriter(new FileWriter(outFile, true))) {
+                        writer.println(String.join(",", Arrays.stream(features)
+                                .mapToObj(Double::toString)
+                                .toArray(String[]::new)));
+                    }
+                } else {
+                    System.out.println("Normal flow: " + Arrays.toString(features));
+                }
             }
         }
 
-        System.out.println("Detection complete. Alerts logged to " + logFilePath);
+        System.out.println("Batch detection complete. Malicious flows saved to " + outputCsv);
     }
 }
