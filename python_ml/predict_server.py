@@ -6,7 +6,7 @@ import os
 
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
-FRONTEND_FOLDER = "../web-dashboard/index.html"
+FRONTEND_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'web-dashboard')
 
 app = Flask(__name__)
 
