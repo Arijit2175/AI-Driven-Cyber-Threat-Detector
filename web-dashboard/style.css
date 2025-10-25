@@ -108,8 +108,48 @@ body.dark-theme #theme-toggle {
     transition: background-color 0.3s;
 }
 
+.data-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+
 .table-container {
+    flex: 2;
+    min-width: 400px;
     overflow-x: auto;
+}
+
+.chart-section {
+    flex: 1;
+    min-width: 300px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+body.dark-theme .chart-section {
+    background-color: #2a2c3b;
+    box-shadow: 0 0 8px rgba(255,255,255,0.05);
+}
+
+.chart-section h3 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: inherit;
+}
+
+.chart-section canvas {
+    width: 100%;
+    height: 250px;
+    transition: all 0.4s ease-in-out;
+}
+
+body.dark-theme .chart-section canvas {
+    filter: drop-shadow(0 0 8px rgba(50, 150, 255, 0.3));
 }
 
 #flows-table {
@@ -132,6 +172,11 @@ body.dark-theme #theme-toggle {
     color: white;
 }
 
+#flows-table tr.normal {
+    background-color: #b2f2bb; 
+    color: #000;
+}
+
 tr.new-flow {
     animation: highlight 2s ease-out;
 }
@@ -148,36 +193,4 @@ tr.new-flow {
 .sidebar::-webkit-scrollbar-thumb {
     background-color: #555;
     border-radius: 3px;
-}
-
-#flows-table tr.normal {
-    background-color: #b2f2bb; 
-    color: #000;
-}
-
-.chart-section {
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 25px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-body.dark-theme .chart-section {
-    background-color: #2a2c3b;
-    box-shadow: 0 0 8px rgba(255,255,255,0.05);
-}
-
-.chart-section h3 {
-    text-align: center;
-    margin-bottom: 10px;
-    color: inherit;
-}
-
-.chart-section canvas {
-    transition: all 0.4s ease-in-out;
-}
-
-body.dark-theme .chart-section canvas {
-    filter: drop-shadow(0 0 8px rgba(50, 150, 255, 0.3));
 }
