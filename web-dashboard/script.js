@@ -1,6 +1,5 @@
 const DELAY_MS = 2500;
 let displayedIndex = 0;
-
 let maliciousCount = 0;
 let normalCount = 0;
 
@@ -24,28 +23,13 @@ const flowChart = new Chart(ctx, {
     },
     options: {
         responsive: true,
-        animation: {
-            duration: 800,   
-            easing: 'easeOutCubic'
-        },
+        animation: { duration: 800, easing: 'easeOutCubic' },
         scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { color: '#000' },
-                grid: { color: 'rgba(0, 0, 0, 0.1)' }
-            },
-            x: {
-                ticks: { color: '#000' },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
-            }
+            y: { beginAtZero: true, ticks: { color: '#000' }, grid: { color: 'rgba(0,0,0,0.1)' } },
+            x: { ticks: { color: '#000' }, grid: { color: 'rgba(0,0,0,0.05)' } }
         },
         plugins: {
-            legend: {
-                labels: {
-                    color: '#000',
-                    font: { size: 13, weight: '500' }
-                }
-            }
+            legend: { labels: { color: '#000', font: { size: 13, weight: '500' } } }
         }
     }
 });
@@ -75,7 +59,6 @@ async function fetchFlows() {
                 <td>${flow.prediction === 1 ? 'Malicious' : 'Normal'}</td>
             `;
             flowsTable.appendChild(tr);
-
             flowsTable.parentElement.scrollTop = flowsTable.parentElement.scrollHeight;
 
             if (flow.prediction === 1) {
@@ -83,9 +66,8 @@ async function fetchFlows() {
                 const li = document.createElement('li');
                 li.textContent = `⚠️ Malicious flow detected: duration=${flow.duration}, pkts=${flow.total_pkts}, bytes=${flow.total_bytes}`;
                 alertsList.appendChild(li);
-            } else {
-                normalCount++;
-            }
+                alertsList.scrollTop = alertsList.scrollHeight; 
+            } else normalCount++;
 
             displayedIndex++;
 
