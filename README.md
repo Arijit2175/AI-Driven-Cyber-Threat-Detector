@@ -105,3 +105,30 @@ python predict_server.py
 
 ---
 
+## ☕ Java Core Setup
+
+1. Navigate to `java_core`:
+```
+cd java_core
+```
+
+2. Compile all java files:
+We need to have the gson-x.x.x.jar file in java_core folder for the java components to be compiled
+```
+javac -cp ".;gson-x.x.x.jar" *.java
+```
+
+3. Run the main module:
+```
+java -cp ".;gson-x.x.x.jar" Main
+```
+
+4. The java program:
+- Captures packets
+- Extract features
+- Sends features to Python for classification
+- Logs detected malicious activity
+- Optionally pushes results to the dashboard
+
+---
+
