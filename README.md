@@ -30,3 +30,38 @@ AI-Driven-Cyber-Threat-Detector
 
 ---
 
+## ⚙️ System Workflow
+
+### 🧩 Step-by-Step Process
+
+1. **Packet Capture (Java):**
+   - `packetcapture.java` continuously monitors live network traffic.
+   - Extracted packets are formatted into flow-based records.
+
+2. **Feature Extraction:**
+   - `featureextractor.java` computes attributes like:
+     - Flow duration  
+     - Packet count  
+     - Bytes per second  
+     - Mean packet size  
+     - Protocol and source/destination ports
+
+3. **Threat Detection (Python):**
+   - `predict_server.py` runs a lightweight Python service exposing an ML model via sockets or REST.
+   - Java sends extracted flow features to this server.
+   - The model (trained using `train_model.py`) returns a label: **Normal** or **Malicious**.
+
+4. **Logging (Java):**
+   - If malicious activity is detected, it is recorded in:
+     - `logs/alerts.log` (human-readable)
+     - `logs/malicious_flows.csv` (structured for analysis)
+
+5. **Visualization (Web Dashboard):**
+   - The **web-dashboard** displays:
+     - Total flows scanned  
+     - Malicious and normal flow counts  
+     - Real-time line/bar charts  
+     - Live updating table with color-coded rows  
+
+---
+
