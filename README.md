@@ -197,3 +197,23 @@ cd web-dashboard
 
 ---
 
+## 📚 References
+
+1. Scikit-learn Documentation – https://scikit-learn.org/stable/documentation.html
+
+2. Pcap4J – https://www.pcap4j.org
+
+3. Chart.js – https://www.chartjs.org
+
+4. Pandas Documentation – https://pandas.pydata.org
+
+5. Flask Documentation – https://flask.palletsprojects.com
+
+6. A. Lashkari et al., “Toward Generating a New Intrusion Detection Dataset and Intrusion Traffic Characterization,” ICISSP, 2017.
+
+7. S. Tavallaee et al., “A Detailed Analysis of the KDD CUP 99 Data Set,” IEEE Symposium on Computational Intelligence for Security and Defense Applications, 2009.
+
+8. R. Sommer & V. Paxson, “Outside the Closed World: On Using Machine Learning for Network Intrusion Detection,” IEEE Symposium on Security and Privacy, 2010.
+
+---
+
