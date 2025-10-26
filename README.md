@@ -124,11 +124,27 @@ java -cp ".;gson-x.x.x.jar" Main
 ```
 
 4. The java program:
-- Captures packets
-- Extract features
-- Sends features to Python for classification
-- Logs detected malicious activity
-- Optionally pushes results to the dashboard
+      - Captures packets
+      - Extract features
+      - Sends features to Python for classification
+      - Logs detected malicious activity
+      - Optionally pushes results to the dashboard
 
+---
+
+## 🌐 Web Dashboard Setup
+
+1. Navigate to the dashboard folder:
+```
+cd web-dashboard
+```
+
+2. Open `index.html` in your browser.
+
+3. The dashboard will:
+- Display live-updating tables and charts
+- Show total flows scanned, alerts, and threat trends
+- Automatically update visuals based on `malicious_flows.csv` or simulated live feed in `script.js`
+      
 ---
 
