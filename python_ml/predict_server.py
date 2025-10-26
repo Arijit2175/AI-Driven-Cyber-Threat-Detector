@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 
+# Load ML model and scaler
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
 FRONTEND_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'web-dashboard')
@@ -17,6 +18,7 @@ FEATURE_COLS = ["duration", "total_pkts", "total_bytes", "mean_pkt_len", "pkt_ra
 
 latest_flows = []
 
+# Prediction endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
     """
@@ -68,6 +70,7 @@ def predict():
 
     return jsonify({"error": "Invalid payload. Use 'features' (single) or 'flows' (batch)."}), 400
 
+# Update flows endpoint
 @app.route('/update_flows', methods=['POST'])
 def update_flows():
     """
@@ -87,12 +90,14 @@ def update_flows():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+# Get flows endpoint
 @app.route('/get_flows', methods=['GET'])
 def get_flows():
     """Return the latest flows with predictions for frontend/dashboard"""
     global latest_flows
     return jsonify({"flows": latest_flows})
 
+# Serve dashboard
 @app.route('/')
 def serve_dashboard():
     """Serve the dashboard HTML page"""

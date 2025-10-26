@@ -1,9 +1,11 @@
 import pandas as pd
 import os
 
+# Convert packet-level CSV to flow-level CSV for ML processing.
 INPUT_CSV = "datasets/packets_raw.csv"
 OUTPUT_CSV = "datasets/sample_traffic.csv"
 
+# Build flow-level features from packet-level data.
 def build_flows(df):
     for col in ['tcp.srcport','tcp.dstport','udp.srcport','udp.dstport','_ws.col.protocol','frame.len']:
         if col not in df.columns:
@@ -39,6 +41,7 @@ def build_flows(df):
 
     return pd.DataFrame(flows)
 
+# Main execution
 def main():
     if not os.path.exists(INPUT_CSV):
         print(f"Input CSV missing: {INPUT_CSV}")

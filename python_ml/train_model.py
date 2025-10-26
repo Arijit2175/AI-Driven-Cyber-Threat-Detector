@@ -7,11 +7,13 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import joblib
 import os
 
+# Constants
 FLOW_CSV = "datasets/sample_traffic.csv"
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
 PROTOCOL_ENCODER_FILE = 'protocol_label_encoder.pkl'
 
+# Main training function
 def main():
     if not os.path.exists(FLOW_CSV):
         print("Flow CSV not found:", FLOW_CSV)
