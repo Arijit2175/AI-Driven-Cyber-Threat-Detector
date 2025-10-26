@@ -215,5 +215,6 @@ cd web-dashboard
 
 8. R. Sommer & V. Paxson, “Outside the Closed World: On Using Machine Learning for Network Intrusion Detection,” IEEE Symposium on Security and Privacy, 2010.
 
----
+<br>
 
+**👨‍💻 Developed by** - @Arijit2175
