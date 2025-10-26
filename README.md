@@ -65,3 +65,20 @@ AI-Driven-Cyber-Threat-Detector
 
 ---
 
+## 🧠 AI Model
+
+The ML model can be trained using **`python_ml/train_model.py`** on `dataset/sample_traffic.csv`.  
+Typical features include flow duration, byte count, and packet rates.  
+You can use models like Random Forest, SVM, or a lightweight neural network.
+
+Example training command:
+
+```
+cd python_ml
+python train_model.py
+```
+
+This will generate and save a trained model file (e.g., model.pkl), which predict_server.py loads for live inference.
+
+---
+
