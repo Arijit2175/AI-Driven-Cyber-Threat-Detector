@@ -84,3 +84,24 @@ This will generate and save a trained model file (e.g., model.pkl), which predic
 
 ---
 
+## 🐍 Python ML Server Setup
+
+1. Navigate to the ML Backend:
+```
+cd python_ml
+```
+
+2. Install dependencies:
+```
+pip install scikit-learn pandas flask joblib
+```
+
+3. Start the prediction server:
+```
+python predict_server.py
+```
+
+4. The server listens on a local port(eg., `http://127.0.0.1:5000`) for feature data sent from java.
+
+---
+
