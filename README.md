@@ -19,8 +19,8 @@ The dashboard presents both tabular and graphical insights into network flows an
 
 ## 🗂️ Project Structure
 
-AI-Driven-Cyber-Threat-Detector
 ```
+AI-Driven-Cyber-Threat-Detector
 │
 ├── web-dashboard # Main dashboard page
 ├── datasets # Sample dataset or dataset you want to use
@@ -87,16 +87,19 @@ This will generate and save a trained model file (e.g., model.pkl), which predic
 ## 🐍 Python ML Server Setup
 
 1. Navigate to the ML Backend:
+
 ```
 cd python_ml
 ```
 
 2. Install dependencies:
+
 ```
 pip install scikit-learn pandas flask joblib
 ```
 
 3. Start the prediction server:
+
 ```
 python predict_server.py
 ```
@@ -108,17 +111,20 @@ python predict_server.py
 ## ☕ Java Core Setup
 
 1. Navigate to `java_core`:
+
 ```
 cd java_core
 ```
 
 2. Compile all java files:
 We need to have the gson-x.x.x.jar file in java_core folder for the java components to be compiled
+
 ```
 javac -cp ".;gson-x.x.x.jar" *.java
 ```
 
 3. Run the main module:
+
 ```
 java -cp ".;gson-x.x.x.jar" Main
 ```
@@ -135,6 +141,7 @@ java -cp ".;gson-x.x.x.jar" Main
 ## 🌐 Web Dashboard Setup
 
 1. Navigate to the dashboard folder:
+
 ```
 cd web-dashboard
 ```
