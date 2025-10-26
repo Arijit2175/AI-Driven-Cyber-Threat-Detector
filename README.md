@@ -20,6 +20,7 @@ The dashboard presents both tabular and graphical insights into network flows an
 ## 🗂️ Project Structure
 
 AI-Driven-Cyber-Threat-Detector
+```
 │
 ├── web-dashboard # Main dashboard page
 ├── datasets # Sample dataset or dataset you want to use
@@ -27,6 +28,7 @@ AI-Driven-Cyber-Threat-Detector
 ├── logs # Output logs are saved here after scanning the flows
 ├── python_ml # Python components (Training the model saves it in the project root)
 └── README.md # Project documentation
+```
 
 ---
 
