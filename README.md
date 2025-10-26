@@ -149,6 +149,7 @@ cd web-dashboard
 ---
 
 ## 📈 Dashboard Features
+
 | Component               | Description                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------ |
 | **Table View**          | Displays flow-by-flow results in real time.                                          |
@@ -159,4 +160,14 @@ cd web-dashboard
 | **Collapsible Sidebar** | Transparent compact sidebar with toggle button.                                      |
 
 ---
+
+📤 Log & Output Files
+
+| File                  | Purpose                                 |
+| --------------------- | --------------------------------------- |
+| `alerts.log`          | Text log of all detected threats        |
+| `malicious_flows.csv` | Structured CSV log for further analysis |
+| `sample_traffic.csv`  | Dataset for training/testing model      |
+
+ ---
 
