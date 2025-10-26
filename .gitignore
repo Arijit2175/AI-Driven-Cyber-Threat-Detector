@@ -6,4 +6,3 @@ __pycache__/
 *.class
 .vscode/
 .fake
-assets/
