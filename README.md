@@ -155,6 +155,16 @@ cd web-dashboard
       
 ---
 
+## 🖼️ Dashboard Preview
+
+You can showcase your dashboard screenshots here:
+
+| Light Mode | Dark Mode |
+|-------------|------------|
+| ![Light Dashboard](assets/light_mode.png) | ![Dark Dashboard](assets/dark_mode.png) |
+
+---
+
 ## 📈 Dashboard Features
 
 | Component               | Description                                                                          |
