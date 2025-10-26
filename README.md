@@ -178,7 +178,7 @@ You can showcase your dashboard screenshots here:
 
 ---
 
-📤 Log & Output Files
+## 📤 Log & Output Files
 
 | File                  | Purpose                                 |
 | --------------------- | --------------------------------------- |
