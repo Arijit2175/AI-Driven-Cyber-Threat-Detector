@@ -171,3 +171,22 @@ cd web-dashboard
 
  ---
 
+## 🔧 Dependencies
+
+1. Python:
+    - scikit-learn
+    - pandas
+    - flask
+    - joblib
+
+2. Java:
+    - Java SE 8+
+    - Gson / JSON-simple for JSON parsing
+    - (Optional) Jpcap / Pcap4J for packet capture
+
+3. Frontend:
+    - Chart.js
+    - Vanilla HTML, CSS, JavaScript
+
+---
+
