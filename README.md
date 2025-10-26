@@ -148,3 +148,15 @@ cd web-dashboard
       
 ---
 
+## 📈 Dashboard Features
+| Component               | Description                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| **Table View**          | Displays flow-by-flow results in real time.                                          |
+| **Chart View**          | Line chart dynamically shows changing malicious vs normal ratio.                     |
+| **Sidebar**             | Displays quick stats (Total, Malicious, Normal) and controls (Export, Theme toggle). |
+| **CSV Export**          | One-click export of current flow data to `.csv`.                                     |
+| **Theme Toggle**        | Switch between Light and Dark modes.                                                 |
+| **Collapsible Sidebar** | Transparent compact sidebar with toggle button.                                      |
+
+---
+
