@@ -3,6 +3,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+// A class to communicate with a remote server for threat detection predictions.
 public class ThreatDetector {
 
     private String serverUrl;

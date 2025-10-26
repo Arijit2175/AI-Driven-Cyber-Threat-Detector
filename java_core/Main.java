@@ -3,6 +3,7 @@ import java.net.*;
 import java.util.*;
 import com.google.gson.*; 
 
+// The main class to run the AI-driven cyber threat detection system.
 public class Main {
 
     public static void main(String[] args) throws Exception {

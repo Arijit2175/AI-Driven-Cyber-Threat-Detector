@@ -1,5 +1,6 @@
 import java.util.*;
 
+// A utility class to extract features from network flow data represented as a map.
 public class FeatureExtractor {
 
     public static double[] extractFeatures(Map<String, String> flow) {

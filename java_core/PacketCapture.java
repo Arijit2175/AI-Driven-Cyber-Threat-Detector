@@ -2,6 +2,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
+// A class to capture and read network flow data from a CSV file.
 public class PacketCapture {
     private String csvPath;
 
