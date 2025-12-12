@@ -33,8 +33,13 @@ public class Main {
         RuleEngine ruleEngine = new RuleEngine();
 
         if (liveMode) {
-            System.out.println("🔴 LIVE MODE: Capturing from interface: " + cfg.interfaceName);
-            PacketCapture capture = new PacketCapture(cfg.interfaceName, cfg.windowSeconds);
+            System.out.println("🔴 LIVE MODE: Capturing from interface: " + cfg.interface_name);
+            if (cfg.interface_name == null || cfg.interface_name.isEmpty()) {
+                System.err.println("❌ No interface specified in config.json");
+                PacketCapture.listInterfaces();
+                return;
+            }
+            PacketCapture capture = new PacketCapture(cfg.interface_name, cfg.windowSeconds);
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 capture.close();
@@ -114,11 +119,16 @@ public class Main {
 
     private static String getSeverityIcon(RuleEngine.Severity severity) {
         switch (severity) {
-            case CRITICAL: return "🔴";
-            case HIGH: return "🟠";
-            case MEDIUM: return "🟡";
-            case LOW: return "🟢";
-            default: return "🚨";
+            case CRITICAL:
+                return "🔴";
+            case HIGH:
+                return "🟠";
+            case MEDIUM:
+                return "🟡";
+            case LOW:
+                return "🟢";
+            default:
+                return "🚨";
         }
     }
 }

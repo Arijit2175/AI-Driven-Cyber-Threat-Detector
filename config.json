@@ -1,5 +1,5 @@
 {
-  "interface": "Ethernet",
+  "interface_name": "\\Device\\NPF_{YOUR-ADAPTER-GUID}",
   "windowSeconds": 2,
   "batchSize": 200,
   "serverUrl": "http://127.0.0.1:5000/predict",

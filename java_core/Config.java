@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 // Minimal config loader for JSON config in project root.
 public class Config {
-    public String interfaceName;
+    public String interface_name;
     public int windowSeconds;
     public int batchSize;
     public String serverUrl;
