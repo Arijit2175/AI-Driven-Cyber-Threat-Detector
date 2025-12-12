@@ -52,7 +52,7 @@ public class Main {
                     continue;
                 }
 
-                processFlows(flows, detector, ruleEngine, logger, maliciousCsv);
+                processFlows(flows, detector, ruleEngine, logger, maliciousCsv, cfg.mlThreshold);
             }
 
         } else {
@@ -60,32 +60,47 @@ public class Main {
             String csvFile = "../datasets/sample_traffic.csv";
             PacketCapture capture = new PacketCapture(csvFile);
             List<Map<String, String>> flows = capture.readFlows();
-            processFlows(flows, detector, ruleEngine, logger, maliciousCsv);
+            processFlows(flows, detector, ruleEngine, logger, maliciousCsv, cfg.mlThreshold);
         }
     }
 
     private static void processFlows(List<Map<String, String>> flows, ThreatDetector detector,
-            RuleEngine ruleEngine, AlertLogger logger, File maliciousCsv) throws Exception {
+            RuleEngine ruleEngine, AlertLogger logger, File maliciousCsv,
+            double mlThreshold) throws Exception {
         List<double[]> featureList = new ArrayList<>(flows.size());
         for (Map<String, String> flowMap : flows) {
             featureList.add(FeatureExtractor.extractFeatures(flowMap));
         }
 
-        List<Integer> preds = detector.predictBatch(featureList);
+        List<ThreatDetector.PredictionResult> preds = detector.predictBatch(featureList);
 
         int alertCount = 0;
         for (int i = 0; i < featureList.size(); i++) {
             double[] features = featureList.get(i);
-            int prediction = preds.get(i);
+            ThreatDetector.PredictionResult result = preds.get(i);
             RuleEngine.RuleResult ruleResult = ruleEngine.evaluate(features);
 
-            boolean detected = prediction == 1 || ruleResult.isSuspicious;
+            // Detection: ML score above threshold OR rules triggered
+            boolean mlDetected = result.score >= mlThreshold;
+            boolean detected = mlDetected || ruleResult.isSuspicious;
 
             if (detected) {
                 alertCount++;
-                String reason = prediction == 1 ? "ML classified malicious" : String.join("; ", ruleResult.reasons);
+                String confidence = String.format("%.2f%%", result.score * 100);
+                String severityIcon = getSeverityIcon(ruleResult.severity);
+
+                String reason;
+                if (mlDetected && ruleResult.isSuspicious) {
+                    reason = "ML+Rules [" + ruleResult.severity + "] (ML: " + confidence + ", "
+                            + String.join("; ", ruleResult.reasons) + ")";
+                } else if (mlDetected) {
+                    reason = "ML (confidence: " + confidence + ")";
+                } else {
+                    reason = "Rules [" + ruleResult.severity + "]: " + String.join("; ", ruleResult.reasons);
+                }
+
                 logger.logAlert("Detected malicious/suspicious flow (" + reason + "): " + Arrays.toString(features));
-                System.out.println("🚨 ALERT! " + reason);
+                System.out.println(severityIcon + " ALERT! " + reason);
                 System.out.println("   Features: " + Arrays.toString(features));
                 try (PrintWriter pw = new PrintWriter(new FileWriter(maliciousCsv, true))) {
                     pw.println(features[0] + "," + features[1] + "," + features[2] + "," +
@@ -96,4 +111,13 @@ public class Main {
 
         System.out.println("  Processed " + flows.size() + " flows → " + alertCount + " alerts");
     }
-}
+
+    private static String getSeverityIcon(RuleEngine.Severity severity) {
+        switch (severity) {
+            case CRITICAL: return "🔴";
+            case HIGH: return "🟠";
+            case MEDIUM: return "🟡";
+            case LOW: return "🟢";
+            default: return "🚨";
+        }
+    }

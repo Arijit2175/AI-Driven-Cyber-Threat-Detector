@@ -6,6 +6,16 @@ import java.util.*;
 // A class to communicate with a remote server for threat detection predictions.
 public class ThreatDetector {
 
+    public static class PredictionResult {
+        public final int prediction;
+        public final double score;
+
+        public PredictionResult(int prediction, double score) {
+            this.prediction = prediction;
+            this.score = score;
+        }
+    }
+
     private String serverUrl;
     private Gson gson = new Gson();
 
@@ -29,12 +39,14 @@ public class ThreatDetector {
 
         try (InputStreamReader reader = new InputStreamReader(conn.getInputStream(), "utf-8")) {
             JsonObject response = gson.fromJson(reader, JsonObject.class);
-            if (response.has("prediction")) return response.get("prediction").getAsInt();
-            else throw new IOException("No 'prediction' in response: " + response);
+            if (response.has("prediction"))
+                return response.get("prediction").getAsInt();
+            else
+                throw new IOException("No 'prediction' in response: " + response);
         }
     }
 
-    public List<Integer> predictBatch(List<double[]> flows) throws IOException {
+    public List<PredictionResult> predictBatch(List<double[]> flows) throws IOException {
         URL url = new URL(serverUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
@@ -62,10 +74,18 @@ public class ThreatDetector {
 
         try (InputStreamReader reader = new InputStreamReader(conn.getInputStream(), "utf-8")) {
             JsonObject response = gson.fromJson(reader, JsonObject.class);
-            if (!response.has("predictions")) throw new IOException("No 'predictions' in response: " + response);
+            if (!response.has("predictions"))
+                throw new IOException("No 'predictions' in response: " + response);
 
-            List<Integer> out = new ArrayList<>();
-            for (JsonElement e : response.getAsJsonArray("predictions")) out.add(e.getAsInt());
+            JsonArray predictions = response.getAsJsonArray("predictions");
+            JsonArray scores = response.has("scores") ? response.getAsJsonArray("scores") : null;
+
+            List<PredictionResult> out = new ArrayList<>();
+            for (int i = 0; i < predictions.size(); i++) {
+                int pred = predictions.get(i).getAsInt();
+                double score = (scores != null && i < scores.size()) ? scores.get(i).getAsDouble() : pred;
+                out.add(new PredictionResult(pred, score));
+            }
             return out;
         }
     }

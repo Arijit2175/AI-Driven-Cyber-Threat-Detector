@@ -34,7 +34,9 @@ def predict():
             df = pd.DataFrame(features, columns=FEATURE_COLS)
             X_scaled = scaler.transform(df)
             pred = int(model.predict(X_scaled)[0])
-            return jsonify({"prediction": pred})
+            proba = model.predict_proba(X_scaled)
+            score = float(proba[0][1])  # Probability of malicious class
+            return jsonify({"prediction": pred, "score": score})
         except Exception as e:
             return jsonify({"error": f"Bad input for 'features': {e}"}), 400
 
@@ -56,15 +58,20 @@ def predict():
             X_scaled = scaler.transform(df)
             preds = model.predict(X_scaled).tolist()
             preds = [int(p) for p in preds]
+            
+            # Get probability scores (confidence for malicious class)
+            proba = model.predict_proba(X_scaled)
+            scores = [float(proba[i][1]) for i in range(len(proba))]  # Prob of class 1 (malicious)
 
             global latest_flows
             latest_flows = []
             for i, row in df.iterrows():
                 flow_dict = row.to_dict()
                 flow_dict['prediction'] = int(preds[i])
+                flow_dict['score'] = scores[i]
                 latest_flows.append(flow_dict)
 
-            return jsonify({"predictions": preds})
+            return jsonify({"predictions": preds, "scores": scores})
         except Exception as e:
             return jsonify({"error": f"Prediction failed: {e}"}), 500
 
