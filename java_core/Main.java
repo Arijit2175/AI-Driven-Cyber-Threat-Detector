@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import com.google.gson.*; 
+import com.google.gson.*;
 
 // The main class to run the AI-driven cyber threat detection system.
 public class Main {
@@ -12,7 +12,8 @@ public class Main {
         String serverUrl = "http://127.0.0.1:5000/predict";
 
         File logsFolder = new File("../logs");
-        if (!logsFolder.exists()) logsFolder.mkdirs();
+        if (!logsFolder.exists())
+            logsFolder.mkdirs();
 
         File logFile = new File(logsFolder, "alerts.log");
         AlertLogger logger = new AlertLogger(logFile.getAbsolutePath());
@@ -27,6 +28,7 @@ public class Main {
 
         PacketCapture capture = new PacketCapture(csvFile);
         ThreatDetector detector = new ThreatDetector(serverUrl);
+        RuleEngine ruleEngine = new RuleEngine();
 
         List<Map<String, String>> flows = capture.readFlows();
         List<double[]> featureList = new ArrayList<>(flows.size());
@@ -39,13 +41,17 @@ public class Main {
         for (int i = 0; i < featureList.size(); i++) {
             double[] features = featureList.get(i);
             int prediction = preds.get(i);
+            RuleEngine.RuleResult ruleResult = ruleEngine.evaluate(features);
 
-            if (prediction == 1) {
-                logger.logAlert("Malicious flow detected: " + Arrays.toString(features));
-                System.out.println("ALERT! Malicious flow: " + Arrays.toString(features));
+            boolean detected = prediction == 1 || ruleResult.isSuspicious;
+
+            if (detected) {
+                String reason = prediction == 1 ? "ML classified malicious" : String.join("; ", ruleResult.reasons);
+                logger.logAlert("Detected malicious/suspicious flow (" + reason + "): " + Arrays.toString(features));
+                System.out.println("ALERT! " + reason + ": " + Arrays.toString(features));
                 try (PrintWriter pw = new PrintWriter(new FileWriter(maliciousCsv, true))) {
                     pw.println(features[0] + "," + features[1] + "," + features[2] + "," +
-                               features[3] + "," + features[4] + "," + features[5]);
+                            features[3] + "," + features[4] + "," + features[5]);
                 }
             } else {
                 logger.logAlert("Normal flow: " + Arrays.toString(features));
