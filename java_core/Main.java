@@ -8,8 +8,11 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String csvFile = "../datasets/sample_traffic.csv";
-        String serverUrl = "http://127.0.0.1:5000/predict";
+        File projectRoot = new File("..");
+        Config cfg = Config.load(projectRoot.getAbsolutePath());
+
+        String csvFile = "../datasets/sample_traffic.csv"; // kept for CSV testing
+        String serverUrl = cfg.serverUrl;
 
         File logsFolder = new File("../logs");
         if (!logsFolder.exists())

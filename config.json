@@ -1,0 +1,12 @@
+{
+  "interface": "Ethernet",
+  "windowSeconds": 2,
+  "batchSize": 200,
+  "serverUrl": "http://127.0.0.1:5000/predict",
+  "mlThreshold": 0.7,
+  "rules": {
+    "icmpRate": 2000,
+    "synRate": 3000,
+    "burstPkts": 50000
+  }
+}
