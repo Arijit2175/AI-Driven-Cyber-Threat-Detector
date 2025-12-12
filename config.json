@@ -1,5 +1,5 @@
 {
-  "interface_name": "\\Device\\NPF_{YOUR-ADAPTER-GUID}",
+  "interface_name": "\\Device\\NPF_{215A437D-1AD7-42F5-A391-BF1066CA8627}",
   "windowSeconds": 2,
   "batchSize": 200,
   "serverUrl": "http://127.0.0.1:5000/predict",
