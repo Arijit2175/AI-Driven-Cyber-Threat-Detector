@@ -11,8 +11,8 @@ public class Main {
         File projectRoot = new File("..");
         Config cfg = Config.load(projectRoot.getAbsolutePath());
 
-        String csvFile = "../datasets/sample_traffic.csv"; // kept for CSV testing
         String serverUrl = cfg.serverUrl;
+        boolean liveMode = args.length > 0 && args[0].equals("--live");
 
         File logsFolder = new File("../logs");
         if (!logsFolder.exists())
@@ -29,18 +29,51 @@ public class Main {
             }
         }
 
-        PacketCapture capture = new PacketCapture(csvFile);
         ThreatDetector detector = new ThreatDetector(serverUrl);
         RuleEngine ruleEngine = new RuleEngine();
 
-        List<Map<String, String>> flows = capture.readFlows();
-        List<double[]> featureList = new ArrayList<>(flows.size());
+        if (liveMode) {
+            System.out.println("🔴 LIVE MODE: Capturing from interface: " + cfg.interfaceName);
+            PacketCapture capture = new PacketCapture(cfg.interfaceName, cfg.windowSeconds);
 
-        for (Map<String, String> flowMap : flows)
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                capture.close();
+                System.out.println("\nCapture stopped.");
+            }));
+
+            int windowCount = 0;
+            while (true) {
+                windowCount++;
+                System.out.println("\n📊 Window #" + windowCount + " (" + cfg.windowSeconds + "s)");
+
+                List<Map<String, String>> flows = capture.captureNextWindow();
+                if (flows.isEmpty()) {
+                    System.out.println("  No flows captured in this window.");
+                    continue;
+                }
+
+                processFlows(flows, detector, ruleEngine, logger, maliciousCsv);
+            }
+
+        } else {
+            System.out.println("📁 CSV MODE: Processing sample_traffic.csv");
+            String csvFile = "../datasets/sample_traffic.csv";
+            PacketCapture capture = new PacketCapture(csvFile);
+            List<Map<String, String>> flows = capture.readFlows();
+            processFlows(flows, detector, ruleEngine, logger, maliciousCsv);
+        }
+    }
+
+    private static void processFlows(List<Map<String, String>> flows, ThreatDetector detector,
+            RuleEngine ruleEngine, AlertLogger logger, File maliciousCsv) throws Exception {
+        List<double[]> featureList = new ArrayList<>(flows.size());
+        for (Map<String, String> flowMap : flows) {
             featureList.add(FeatureExtractor.extractFeatures(flowMap));
+        }
 
         List<Integer> preds = detector.predictBatch(featureList);
 
+        int alertCount = 0;
         for (int i = 0; i < featureList.size(); i++) {
             double[] features = featureList.get(i);
             int prediction = preds.get(i);
@@ -49,59 +82,18 @@ public class Main {
             boolean detected = prediction == 1 || ruleResult.isSuspicious;
 
             if (detected) {
+                alertCount++;
                 String reason = prediction == 1 ? "ML classified malicious" : String.join("; ", ruleResult.reasons);
                 logger.logAlert("Detected malicious/suspicious flow (" + reason + "): " + Arrays.toString(features));
-                System.out.println("ALERT! " + reason + ": " + Arrays.toString(features));
+                System.out.println("🚨 ALERT! " + reason);
+                System.out.println("   Features: " + Arrays.toString(features));
                 try (PrintWriter pw = new PrintWriter(new FileWriter(maliciousCsv, true))) {
                     pw.println(features[0] + "," + features[1] + "," + features[2] + "," +
                             features[3] + "," + features[4] + "," + features[5]);
                 }
-            } else {
-                logger.logAlert("Normal flow: " + Arrays.toString(features));
-                System.out.println("Normal flow: " + Arrays.toString(features));
             }
         }
 
-        List<Map<String, Object>> resultPayload = new ArrayList<>();
-        for (int i = 0; i < featureList.size(); i++) {
-            double[] f = featureList.get(i);
-            int pred = preds.get(i);
-
-            Map<String, Object> entry = new LinkedHashMap<>();
-            entry.put("duration", f[0]);
-            entry.put("total_pkts", f[1]);
-            entry.put("total_bytes", f[2]);
-            entry.put("mean_pkt_len", f[3]);
-            entry.put("pkt_rate", f[4]);
-            entry.put("protocol", f[5]);
-            entry.put("prediction", pred);
-
-            resultPayload.add(entry);
-        }
-
-        try {
-            URL updateUrl = new URL("http://127.0.0.1:5000/update_flows");
-            HttpURLConnection conn = (HttpURLConnection) updateUrl.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-            conn.setDoOutput(true);
-
-            Gson gson = new Gson();
-            try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = gson.toJson(resultPayload).getBytes("utf-8");
-                os.write(input, 0, input.length);
-            }
-
-            int responseCode = conn.getResponseCode();
-            if (responseCode == 200)
-                System.out.println("✅ Flow data sent to dashboard successfully.");
-            else
-                System.out.println("⚠️ Failed to update dashboard. HTTP " + responseCode);
-        } catch (Exception e) {
-            System.err.println("Error sending data to dashboard: " + e.getMessage());
-        }
-
-        System.out.println("Detection complete. Alerts logged to " + logFile.getAbsolutePath());
-        System.out.println("Malicious flows saved to " + maliciousCsv.getAbsolutePath());
+        System.out.println("  Processed " + flows.size() + " flows → " + alertCount + " alerts");
     }
 }
