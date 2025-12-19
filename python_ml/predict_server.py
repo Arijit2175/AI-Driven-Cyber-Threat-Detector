@@ -13,6 +13,12 @@ app = Flask(__name__, static_folder=FRONTEND_FOLDER, static_url_path='')
 
 model = joblib.load(MODEL_FILE)
 scaler = joblib.load(SCALER_FILE)
+protocol_encoder = None
+if os.path.exists(PROTOCOL_ENCODER_FILE):
+    try:
+        protocol_encoder = joblib.load(PROTOCOL_ENCODER_FILE)
+    except Exception:
+        protocol_encoder = None
 
 FEATURE_COLS = ["duration", "total_pkts", "total_bytes", "mean_pkt_len", "pkt_rate", "protocol"]
 
@@ -32,6 +38,27 @@ def predict():
         try:
             features = np.array(data['features']).reshape(1, -1)
             df = pd.DataFrame(features, columns=FEATURE_COLS)
+            # Map numeric protocol codes to names for encoder
+            if protocol_encoder is not None:
+                def map_proto(v):
+                    try:
+                        iv = int(v)
+                        if iv == 6:
+                            return 'TCP'
+                        elif iv == 17:
+                            return 'UDP'
+                        elif iv == 1:
+                            return 'ICMP'
+                        else:
+                            return 'OTHER'
+                    except Exception:
+                        return str(v).upper()
+                df['protocol'] = df['protocol'].apply(map_proto)
+                # Encode using saved label encoder from training
+                try:
+                    df['protocol'] = protocol_encoder.transform(df['protocol'])
+                except Exception:
+                    pass
             X_scaled = scaler.transform(df)
             pred = int(model.predict(X_scaled)[0])
             proba = model.predict_proba(X_scaled)
@@ -51,6 +78,26 @@ def predict():
             else:
                 df = pd.DataFrame(flows)
                 df = df[FEATURE_COLS]
+            # Map numeric protocol codes to names and encode
+            if protocol_encoder is not None:
+                def map_proto(v):
+                    try:
+                        iv = int(v)
+                        if iv == 6:
+                            return 'TCP'
+                        elif iv == 17:
+                            return 'UDP'
+                        elif iv == 1:
+                            return 'ICMP'
+                        else:
+                            return 'OTHER'
+                    except Exception:
+                        return str(v).upper()
+                df['protocol'] = df['protocol'].apply(map_proto)
+                try:
+                    df['protocol'] = protocol_encoder.transform(df['protocol'])
+                except Exception:
+                    pass
         except Exception as e:
             return jsonify({"error": f"Could not convert flows to DataFrame: {e}"}), 400
 

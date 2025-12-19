@@ -80,6 +80,7 @@ public class Main {
         List<ThreatDetector.PredictionResult> preds = detector.predictBatch(featureList);
 
         int alertCount = 0;
+        List<Map<String, Object>> resultPayload = new ArrayList<>();
         for (int i = 0; i < featureList.size(); i++) {
             double[] features = featureList.get(i);
             ThreatDetector.PredictionResult result = preds.get(i);
@@ -112,9 +113,39 @@ public class Main {
                             features[3] + "," + features[4] + "," + features[5]);
                 }
             }
+
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("duration", features[0]);
+            entry.put("total_pkts", features[1]);
+            entry.put("total_bytes", features[2]);
+            entry.put("mean_pkt_len", features[3]);
+            entry.put("pkt_rate", features[4]);
+            entry.put("protocol", features[5]);
+            entry.put("prediction", result.prediction);
+            entry.put("score", result.score);
+            resultPayload.add(entry);
         }
 
         System.out.println("  Processed " + flows.size() + " flows → " + alertCount + " alerts");
+
+        // Push results to dashboard for live view
+        try {
+            URL updateUrl = new URL("http://127.0.0.1:5000/update_flows");
+            HttpURLConnection conn = (HttpURLConnection) updateUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            conn.setDoOutput(true);
+
+            Gson gson = new Gson();
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = gson.toJson(resultPayload).getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            conn.getResponseCode();
+        } catch (Exception e) {
+            // Non-fatal: dashboard push failure
+        }
     }
 
     private static String getSeverityIcon(RuleEngine.Severity severity) {
