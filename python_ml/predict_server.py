@@ -7,6 +7,7 @@ import os
 # Load ML model and scaler
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
+PROTOCOL_ENCODER_FILE = 'protocol_label_encoder.pkl'
 FRONTEND_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'web-dashboard')
 
 app = Flask(__name__, static_folder=FRONTEND_FOLDER, static_url_path='')
