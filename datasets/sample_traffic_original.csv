@@ -1,0 +1,13 @@
+flow_key,duration,total_pkts,total_bytes,mean_pkt_len,pkt_rate,protocol,label
+normal_1,2.05,5,220,44,2.44,TCP,0
+normal_2,2.04,5,220,44,2.45,TCP,0
+normal_3,1.02,3,132,44,2.95,TCP,0
+normal_4,2.04,5,220,44,2.45,TCP,0
+normal_5,5.2,10,1200,120,1.92,UDP,0
+normal_6,3.5,8,640,80,2.29,TCP,0
+normal_7,4.0,12,960,80,3.0,UDP,0
+normal_8,0.8,2,100,50,2.5,TCP,0
+syn_flood_1,0.2,500,50000,100,2500.0,TCP,1
+syn_flood_2,0.25,400,40000,100,1600.0,TCP,1
+udp_flood_1,0.3,1000,80000,80,3333.33,UDP,1
+portscan_1,0.1,100,5000,50,1000.0,TCP,1
