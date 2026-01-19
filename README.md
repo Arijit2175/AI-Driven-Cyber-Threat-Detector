@@ -155,6 +155,117 @@ cd web-dashboard
       
 ---
 
+## 🕵️ Real-Time Detection Procedure
+
+Follow this end-to-end workflow to collect realistic normal traffic, merge it with your attack samples, train the model, and validate real-time detection on the dashboard.
+
+### 1. Collect Normal Baseline
+- Run the normal java detector to capture background flows for at least a minute.
+- Result: appends normal flows to a CSV under `datasets/`.
+
+Commands (Windows):
+
+```
+cd python_ml
+python collect_normal_samples.py LOOPBACK
+```
+
+- Options:
+   - `--duration`: seconds to capture normal traffic
+   - `--interface`: capture interface name (e.g., `LOOPBACK`, or an actual NIC)
+
+### 2. Merge Training Data
+- Combine your existing attack dataset with the newly collected normal samples.
+- Result: a merged training CSV saved under `datasets/` (e.g., `merged_training.csv`).
+
+```
+cd python_ml
+python merge_training_data.py 
+```
+
+### 3. Train the Model
+- Retrain the classifier with the merged dataset.
+- Output: model artifacts saved next to `python_ml` (loaded by the backend).
+
+```
+cd python_ml
+python train_model.py 
+```
+
+Artifacts expected:
+- `rf_model.pkl`
+- `scaler.pkl`
+- `protocol_label_encoder.pkl`
+
+### 4. Start the Backend API
+- Serves prediction endpoints and the dashboard.
+
+```
+cd python_ml
+python predict_server.py
+```
+
+- Endpoints used by the system:
+   - `GET /` → serves the dashboard
+   - `POST /predict` → single prediction
+   - `POST /update_flows` → detector posts window results
+   - `GET /get_flows` → dashboard polls flows (includes live + CSV malicious)
+   - `GET /get_alerts` → dashboard polls recent alerts from `logs/alerts.log`
+
+### 5. Start the Java Detector (Live Mode)
+- Captures packets and pushes flow results to the backend.
+
+```
+cd java_core
+javac -cp "lib/*" *.java
+java -cp "lib/*;." Main --live
+```
+
+- Ensure in `config.json` (loaded by `Config`) you have:
+   - `interface_name`: e.g., `LOOPBACK` or your NIC name
+   - `mlThreshold`: e.g., `0.5`
+   - `windowSeconds`: e.g., `5`
+
+### 6. Run the Simulator
+- Generates synthetic attack traffic to validate detection.
+
+```
+cd python_ml
+python test_attack_simulator.py --syn --duration 5
+```
+
+- Available simulations:
+   - `--syn` (SYN flood)
+   - `--scan` (port scan)
+   - `--udp` (UDP flood)
+   - `--baseline` (normal baseline)
+
+### 7. View the Dashboard
+- Open the UI at:
+
+```
+http://127.0.0.1:5000/
+```
+
+- You should see:
+   - Alerts in the left sidebar (CRITICAL/HIGH formatted cards)
+   - Malicious flows in red rows with counts and charts updating
+   - Normal flows in green rows
+
+If malicious flows already exist in `logs/malicious_flows.csv`, they are included alongside live results without restarting.
+
+### Quick Troubleshooting
+- Dashboard not updating immediately:
+   - Ensure `predict_server.py` is running and reachable at `127.0.0.1:5000`.
+   - Just refresh the page (no hard refresh required after recent fixes).
+- No malicious flows while alerts exist:
+   - Confirm Java detector is pushing via `POST /update_flows`.
+   - Check `logs/malicious_flows.csv` is being written.
+- Java capture errors:
+   - Install/repair Npcap and verify the interface name in `config.json`.
+
+---
+
 ## 🖼️ Dashboard Preview
 
 You can showcase your dashboard screenshots here:
@@ -184,8 +295,9 @@ You can showcase your dashboard screenshots here:
 | --------------------- | --------------------------------------- |
 | `alerts.log`          | Text log of all detected threats        |
 | `malicious_flows.csv` | Structured CSV log for further analysis |
-| `sample_traffic.csv`  | Dataset for training/testing model      |
-
+| `sample_traffic_original.csv`  | Dataset for training/testing model      |
+| `sample_traffic.csv`  | Dataset for merging with testing dataset      |
+| `windows_normal_traffic.csv`  | Dataset collected from windows traffic      |
  ---
 
 ## 🔧 Dependencies
