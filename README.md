@@ -167,7 +167,7 @@ Commands (Windows):
 
 ```
 cd python_ml
-python collect_normal_samples.py LOOPBACK
+python collect_normal_samples.py 
 ```
 
 - Options:
