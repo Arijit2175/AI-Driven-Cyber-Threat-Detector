@@ -79,7 +79,6 @@ public class RuleEngine {
             }
         }
 
-
         return new RuleResult(!reasons.isEmpty(), reasons, maxSeverity);
     }
 

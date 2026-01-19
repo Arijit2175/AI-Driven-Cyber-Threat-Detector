@@ -58,7 +58,7 @@ public class Main {
                 }
 
                 try {
-                    Thread.sleep(500); 
+                    Thread.sleep(500);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -92,7 +92,8 @@ public class Main {
             RuleEngine.RuleResult ruleResult = ruleEngine.evaluate(features);
 
             boolean mlDetected = result.score >= mlThreshold;
-            boolean highRule = ruleResult.severity == RuleEngine.Severity.HIGH || ruleResult.severity == RuleEngine.Severity.CRITICAL;
+            boolean highRule = ruleResult.severity == RuleEngine.Severity.HIGH
+                    || ruleResult.severity == RuleEngine.Severity.CRITICAL;
             boolean detected = mlDetected || highRule;
 
             if (i < 3) {
@@ -157,7 +158,7 @@ public class Main {
 
             conn.getResponseCode();
         } catch (Exception e) {
-            
+
         }
     }
 
