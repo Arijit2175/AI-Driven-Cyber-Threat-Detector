@@ -1,7 +1,6 @@
 import java.io.*;
 import java.time.LocalDateTime;
 
-// A simple logger class to log alert messages to a specified file.
 public class AlertLogger {
 
     private String logFile;

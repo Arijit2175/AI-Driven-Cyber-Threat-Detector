@@ -3,7 +3,6 @@ import java.net.*;
 import java.util.*;
 import com.google.gson.*;
 
-// The main class to run the AI-driven cyber threat detection system.
 public class Main {
 
     public static void main(String[] args) throws Exception {
@@ -54,10 +53,16 @@ public class Main {
                 List<Map<String, String>> flows = capture.captureNextWindow();
                 if (flows.isEmpty()) {
                     System.out.println("  No flows captured in this window.");
-                    continue;
+                } else {
+                    processFlows(flows, detector, ruleEngine, logger, maliciousCsv, cfg.mlThreshold);
                 }
 
-                processFlows(flows, detector, ruleEngine, logger, maliciousCsv, cfg.mlThreshold);
+                try {
+                    Thread.sleep(500); 
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
 
         } else {
@@ -86,9 +91,16 @@ public class Main {
             ThreatDetector.PredictionResult result = preds.get(i);
             RuleEngine.RuleResult ruleResult = ruleEngine.evaluate(features);
 
-            // Detection: ML score above threshold OR rules triggered
             boolean mlDetected = result.score >= mlThreshold;
-            boolean detected = mlDetected || ruleResult.isSuspicious;
+            boolean highRule = ruleResult.severity == RuleEngine.Severity.HIGH || ruleResult.severity == RuleEngine.Severity.CRITICAL;
+            boolean detected = mlDetected || highRule;
+
+            if (i < 3) {
+                System.out.println("  [DEBUG] Flow " + i + ": pred=" + result.prediction +
+                        ", score=" + String.format("%.4f", result.score) +
+                        ", threshold=" + String.format("%.4f", mlThreshold) +
+                        ", features=" + Arrays.toString(features));
+            }
 
             if (detected) {
                 alertCount++;
@@ -123,12 +135,13 @@ public class Main {
             entry.put("protocol", features[5]);
             entry.put("prediction", result.prediction);
             entry.put("score", result.score);
+            entry.put("severity", ruleResult.severity.toString());
+            entry.put("is_alert", detected);
             resultPayload.add(entry);
         }
 
         System.out.println("  Processed " + flows.size() + " flows → " + alertCount + " alerts");
 
-        // Push results to dashboard for live view
         try {
             URL updateUrl = new URL("http://127.0.0.1:5000/update_flows");
             HttpURLConnection conn = (HttpURLConnection) updateUrl.openConnection();
@@ -144,7 +157,7 @@ public class Main {
 
             conn.getResponseCode();
         } catch (Exception e) {
-            // Non-fatal: dashboard push failure
+            
         }
     }
 

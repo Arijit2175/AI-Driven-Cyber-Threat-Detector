@@ -1,9 +1,10 @@
-const DELAY_MS = 2500;
+const DELAY_MS = 500;
 let displayedIndex = 0;
 let maliciousCount = 0;
 let normalCount = 0;
 let allFlows = [];
 let cumulativeData = [];
+let dismissedAlerts = new Set(); 
 
 const ctx = document.getElementById('flowChart').getContext('2d');
 const lineCtx = document.getElementById('lineChart').getContext('2d');
@@ -39,8 +40,15 @@ async function insertFlow(flow){
     const flowsTable = document.querySelector('#flows-table tbody');
     const alertsList = document.querySelector('#alerts-list');
 
+    const severity = (flow.severity || '').toString().trim().toUpperCase();
+    const isAlert = flow.is_alert === true || flow.is_alert === 'true';
+    const highSeverity = severity === 'CRITICAL' || severity === 'HIGH';
+    const mlHigh = (flow.prediction === 1) || (flow.score !== undefined && flow.score >= 0.5);
+    const isMalicious = isAlert || highSeverity || mlHigh;
+    const severityLabel = severity || (isAlert ? 'ALERT' : '');
+
     const tr = document.createElement('tr');
-    tr.className = flow.prediction===1?'malicious new-flow':'normal new-flow';
+    tr.className = isMalicious ? 'malicious new-flow' : 'normal new-flow';
     tr.innerHTML = `
         <td>${flow.duration}</td>
         <td>${flow.total_pkts}</td>
@@ -48,15 +56,15 @@ async function insertFlow(flow){
         <td>${flow.mean_pkt_len}</td>
         <td>${flow.pkt_rate}</td>
         <td>${flow.protocol}</td>
-        <td>${flow.prediction===1?'Malicious':'Normal'}</td>
+        <td>${isMalicious ? (severityLabel || 'Malicious') : (severityLabel || 'Normal')}</td>
     `;
     flowsTable.appendChild(tr);
     flowsTable.parentElement.scrollTop = flowsTable.parentElement.scrollHeight;
 
-    if(flow.prediction===1){
+    if(isMalicious){
         maliciousCount++;
         const li = document.createElement('li');
-        li.textContent = `⚠️ Malicious flow detected: duration=${flow.duration}, pkts=${flow.total_pkts}, bytes=${flow.total_bytes}`;
+        li.textContent = `🔴 ${flow.severity} threat: duration=${flow.duration}, pkts=${flow.total_pkts}, rate=${flow.pkt_rate} pkt/s`;
         alertsList.appendChild(li);
         alertsList.scrollTop = alertsList.scrollHeight;
     } else normalCount++;
@@ -65,7 +73,7 @@ async function insertFlow(flow){
     updateSummary();
     updateCharts();
 
-    await new Promise(resolve => setTimeout(resolve, 200)); // simulate real-time flow
+    await new Promise(resolve => setTimeout(resolve, 50)); 
 }
 
 async function processNewFlows(flows){
@@ -79,9 +87,20 @@ async function fetchFlows(){
     try{
         const response = await fetch('http://127.0.0.1:5000/get_flows');
         const data = await response.json();
-        const flows = data.flows||[];
-        allFlows = allFlows.concat(flows.slice(displayedIndex));
-        await processNewFlows(allFlows);
+        const newFlows = data.flows||[];
+        
+        for(const flow of newFlows) {
+            const isDuplicate = allFlows.some(f => 
+                f.duration === flow.duration && 
+                f.total_pkts === flow.total_pkts && 
+                f.total_bytes === flow.total_bytes &&
+                f.pkt_rate === flow.pkt_rate
+            );
+            if (!isDuplicate) {
+                allFlows.push(flow);
+                await insertFlow(flow);
+            }
+        }
         applyFilter(currentFilter);
     }catch(err){ console.error('Error fetching flows:', err); }
 }
@@ -120,7 +139,14 @@ themeToggle.addEventListener('click',()=>{
     });
 });
 
-document.getElementById('clear-alerts').addEventListener('click',()=>{ document.getElementById('alerts-list').innerHTML=''; });
+document.getElementById('clear-alerts').addEventListener('click',()=>{ 
+    const alertsList = document.querySelector('#alerts-list');
+    alertsList.querySelectorAll('li').forEach(li => {
+        const alertText = li.getAttribute('data-alert-text');
+        if(alertText) dismissedAlerts.add(alertText);
+    });
+    alertsList.innerHTML = ''; 
+});
 
 let currentFilter='all';
 document.querySelectorAll('.filter-buttons button').forEach(btn=>{
@@ -131,6 +157,63 @@ document.querySelectorAll('.filter-buttons button').forEach(btn=>{
         applyFilter(currentFilter);
     });
 });
+
+async function fetchAlerts(){
+    try{
+        const res = await fetch('http://127.0.0.1:5000/get_alerts');
+        const data = await res.json();
+        const alerts = data.alerts || [];
+        const alertsList = document.querySelector('#alerts-list');
+        alertsList.innerHTML = '';
+        alerts.forEach(line=>{
+            if(dismissedAlerts.has(line)) return;
+            
+            const upper = line.toUpperCase();
+            if(upper.includes('CRITICAL') || upper.includes('HIGH')){
+                const li = document.createElement('li');
+                
+                const timeMatch = line.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
+                const timestamp = timeMatch ? timeMatch[1].split('T')[1].substring(0,8) : '';
+                
+                let severity = 'HIGH';
+                let icon = '🟠';
+                let severityClass = 'high-alert';
+                if(upper.includes('CRITICAL')){
+                    severity = 'CRITICAL';
+                    icon = '🔴';
+                    severityClass = 'critical-alert';
+                }
+                
+                let attackType = 'Suspicious Activity';
+                if(upper.includes('SYN FLOOD')) attackType = 'SYN Flood Attack';
+                else if(upper.includes('DDOS') || upper.includes('EXTREME PACKET RATE')) attackType = 'DDoS Attack';
+                else if(upper.includes('SCAN') || upper.includes('BURST')) attackType = 'Port Scan';
+                else if(upper.includes('UDP AMPLIFICATION')) attackType = 'UDP Amplification';
+                else if(upper.includes('EXFILTRATION')) attackType = 'Data Exfiltration';
+                
+                const rateMatch = line.match(/([\d.]+),\s*([\d.]+)\]$/);
+                const rate = rateMatch ? `${Math.round(parseFloat(rateMatch[2]))} pkt/s` : '';
+                
+                li.className = severityClass;
+                li.setAttribute('data-alert-text', line); 
+                li.innerHTML = `
+                    <div class="alert-header">
+                        <span class="alert-icon">${icon}</span>
+                        <span class="alert-severity">${severity}</span>
+                        <span class="alert-time">${timestamp}</span>
+                    </div>
+                    <div class="alert-body">
+                        <div class="alert-type">${attackType}</div>
+                        ${rate ? `<div class="alert-rate">${rate}</div>` : ''}
+                    </div>
+                `;
+                
+                alertsList.appendChild(li);
+            }
+        });
+        alertsList.scrollTop = alertsList.scrollHeight;
+    }catch(err){ console.error('Error fetching alerts:', err); }
+}
 
 function applyFilter(filter){
     document.querySelectorAll('#flows-table tbody tr').forEach(row=>{
@@ -157,5 +240,7 @@ document.getElementById('sidebar-toggle').addEventListener('click',()=>{
     document.querySelector('.sidebar').classList.toggle('collapsed');
 });
 
-setInterval(fetchFlows, DELAY_MS);
 fetchFlows();
+fetchAlerts();
+setInterval(fetchFlows, DELAY_MS);
+setInterval(fetchAlerts, 1000);

@@ -4,16 +4,17 @@ import pandas as pd
 import numpy as np
 import os
 
-# Load ML model and scaler
 MODEL_FILE = 'rf_model.pkl'
 SCALER_FILE = 'scaler.pkl'
 PROTOCOL_ENCODER_FILE = 'protocol_label_encoder.pkl'
 FRONTEND_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'web-dashboard')
+ALERT_LOG = os.path.join(os.path.dirname(__file__), '..', 'logs', 'alerts.log')
 
 app = Flask(__name__, static_folder=FRONTEND_FOLDER, static_url_path='')
 
 model = joblib.load(MODEL_FILE)
 scaler = joblib.load(SCALER_FILE)
+
 protocol_encoder = None
 if os.path.exists(PROTOCOL_ENCODER_FILE):
     try:
@@ -25,7 +26,6 @@ FEATURE_COLS = ["duration", "total_pkts", "total_bytes", "mean_pkt_len", "pkt_ra
 
 latest_flows = []
 
-# Prediction endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
     """
@@ -39,7 +39,6 @@ def predict():
         try:
             features = np.array(data['features']).reshape(1, -1)
             df = pd.DataFrame(features, columns=FEATURE_COLS)
-            # Map numeric protocol codes to names for encoder
             if protocol_encoder is not None:
                 def map_proto(v):
                     try:
@@ -55,15 +54,14 @@ def predict():
                     except Exception:
                         return str(v).upper()
                 df['protocol'] = df['protocol'].apply(map_proto)
-                # Encode using saved label encoder from training
                 try:
                     df['protocol'] = protocol_encoder.transform(df['protocol'])
-                except Exception:
-                    pass
+                except Exception as enc_err:
+                    df['protocol'] = df['protocol'].apply(lambda x: {'TCP': 6, 'UDP': 17, 'ICMP': 1, 'OTHER': 0}.get(x, 0))
             X_scaled = scaler.transform(df)
             pred = int(model.predict(X_scaled)[0])
             proba = model.predict_proba(X_scaled)
-            score = float(proba[0][1])  # Probability of malicious class
+            score = float(proba[0][1]) 
             return jsonify({"prediction": pred, "score": score})
         except Exception as e:
             return jsonify({"error": f"Bad input for 'features': {e}"}), 400
@@ -79,7 +77,6 @@ def predict():
             else:
                 df = pd.DataFrame(flows)
                 df = df[FEATURE_COLS]
-            # Map numeric protocol codes to names and encode
             if protocol_encoder is not None:
                 def map_proto(v):
                     try:
@@ -97,8 +94,8 @@ def predict():
                 df['protocol'] = df['protocol'].apply(map_proto)
                 try:
                     df['protocol'] = protocol_encoder.transform(df['protocol'])
-                except Exception:
-                    pass
+                except Exception as enc_err:
+                    df['protocol'] = df['protocol'].apply(lambda x: {'TCP': 6, 'UDP': 17, 'ICMP': 1, 'OTHER': 0}.get(x, 0))
         except Exception as e:
             return jsonify({"error": f"Could not convert flows to DataFrame: {e}"}), 400
 
@@ -107,9 +104,8 @@ def predict():
             preds = model.predict(X_scaled).tolist()
             preds = [int(p) for p in preds]
             
-            # Get probability scores (confidence for malicious class)
             proba = model.predict_proba(X_scaled)
-            scores = [float(proba[i][1]) for i in range(len(proba))]  # Prob of class 1 (malicious)
+            scores = [float(proba[i][1]) for i in range(len(proba))]  
 
             global latest_flows
             latest_flows = []
@@ -125,7 +121,6 @@ def predict():
 
     return jsonify({"error": "Invalid payload. Use 'features' (single) or 'flows' (batch)."}), 400
 
-# Update flows endpoint
 @app.route('/update_flows', methods=['POST'])
 def update_flows():
     """
@@ -140,19 +135,58 @@ def update_flows():
         data = request.get_json(force=True)
         if not isinstance(data, list):
             return jsonify({"error": "Expected a list of flow objects"}), 400
-        latest_flows = data[-100:] 
+        latest_flows.extend(data)
         return jsonify({"status": "ok", "count": len(latest_flows)})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-# Get flows endpoint
+# Get flows endpoint - returns current session flows + all malicious flows from CSV
 @app.route('/get_flows', methods=['GET'])
 def get_flows():
-    """Return the latest flows with predictions for frontend/dashboard"""
+    """Return the latest flows from current session + all malicious flows from CSV"""
     global latest_flows
-    return jsonify({"flows": latest_flows})
+    all_flows = list(latest_flows)  
+    
+    malicious_csv = os.path.join(os.path.dirname(__file__), '..', 'logs', 'malicious_flows.csv')
+    if os.path.exists(malicious_csv):
+        try:
+            df = pd.read_csv(malicious_csv)
+            for _, row in df.iterrows():
+                flow_dict = row.to_dict()
+                flow_dict = {k: (float(v) if isinstance(v, (np.floating, float)) else int(v) if isinstance(v, (np.integer, int)) else v) 
+                            for k, v in flow_dict.items()}
+                is_duplicate = any(
+                    f.get('duration') == flow_dict.get('duration') and
+                    f.get('total_pkts') == flow_dict.get('total_pkts') and
+                    f.get('pkt_rate') == flow_dict.get('pkt_rate')
+                    for f in latest_flows
+                )
+                if not is_duplicate:
+                    flow_dict['prediction'] = 1  
+                    flow_dict['score'] = 0.95    
+                    flow_dict['severity'] = 'CRITICAL'
+                    flow_dict['is_alert'] = True
+                    all_flows.append(flow_dict)
+        except Exception as e:
+            pass 
+    
+    return jsonify({"flows": all_flows})
 
-# Serve dashboard
+@app.route('/get_alerts', methods=['GET'])
+def get_alerts():
+    alerts = []
+    try:
+        if os.path.exists(ALERT_LOG):
+            with open(ALERT_LOG, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()[-100:] 
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    alerts.append(line)
+    except Exception as e:
+        return jsonify({"alerts": alerts, "error": str(e)}), 500
+    return jsonify({"alerts": alerts})
+
 @app.route('/')
 def serve_dashboard():
     """Serve the dashboard HTML page"""

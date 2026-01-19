@@ -3,13 +3,15 @@ import time
 import sys
 import argparse
 
+TARGET_IP = "127.0.0.1"
+
 def syn_flood_simulation(duration=5):
     """Simulates SYN flood pattern - high rate of connection attempts"""
     print("🔴 Simulating SYN Flood (high connection rate)...")
     print(f"   Duration: {duration} seconds")
     print("   This should trigger CRITICAL/HIGH severity alerts\n")
     
-    target_ip = "127.0.0.1"
+    target_ip = TARGET_IP
     target_port = 80
     
     start = time.time()
@@ -23,7 +25,7 @@ def syn_flood_simulation(duration=5):
             sock.close()
             count += 1
         except:
-            count += 1  # Count failed attempts too
+            count += 1  
     
     print(f"✓ Sent {count} connection attempts ({count/duration:.0f} per second)")
     print(f"   Expected detection: CRITICAL - SYN flood pattern\n")
@@ -34,7 +36,7 @@ def port_scan_simulation():
     print("   Scanning ports 1-500")
     print("   This should trigger HIGH/MEDIUM severity alerts\n")
     
-    target_ip = "127.0.0.1"
+    target_ip = TARGET_IP
     count = 0
     
     start = time.time()
@@ -58,7 +60,7 @@ def udp_flood_simulation(duration=5):
     print(f"   Duration: {duration} seconds")
     print("   This should trigger HIGH severity alerts\n")
     
-    target_ip = "127.0.0.1"
+    target_ip = TARGET_IP
     target_port = 53
     payload = b"X" * 64
     
@@ -83,10 +85,9 @@ def data_transfer_simulation():
     print("   Sending 10MB of data")
     print("   This should trigger MEDIUM severity alerts\n")
     
-    target_ip = "127.0.0.1"
+    target_ip = TARGET_IP
     target_port = 9999
     
-    # Create a simple server socket to receive data
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
@@ -97,7 +98,6 @@ def data_transfer_simulation():
     server.listen(1)
     server.settimeout(1)
     
-    # Client sends large data
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     try:
@@ -110,11 +110,11 @@ def data_transfer_simulation():
             server.close()
             return
 
-        payload = b"X" * 1024 * 1024  # 1MB chunks
+        payload = b"X" * 1024 * 1024  
         total_sent = 0
         start = time.time()
 
-        for _ in range(10):  # Send 10MB
+        for _ in range(10):  
             client.send(payload)
             total_sent += len(payload)
 
@@ -139,16 +139,15 @@ def normal_traffic_baseline():
     print("🟢 Generating Normal Traffic Baseline...")
     print("   This should NOT trigger alerts\n")
     
-    target_ip = "127.0.0.1"
+    target_ip = TARGET_IP
     
-    # Make a few normal connections
     for i in range(5):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(0.5)
             sock.connect((target_ip, 80))
             sock.close()
-            time.sleep(0.5)  # Normal delay between requests
+            time.sleep(0.5)  
         except:
             pass
     
@@ -163,14 +162,17 @@ def main():
     parser.add_argument("--data", action="store_true", help="Run large data transfer simulation")
     parser.add_argument("--baseline", action="store_true", help="Run normal traffic baseline")
     parser.add_argument("--duration", type=int, default=5, help="Duration in seconds for flood tests")
+    parser.add_argument("--target-ip", type=str, default=None, help="Target IP (default: 127.0.0.1). Use your LAN IP to hit a NIC.")
     args = parser.parse_args()
 
     print("=" * 60)
     print("AI-Driven Cyber Threat Detector - Attack Simulator")
-    print("Safe: traffic only to localhost (127.0.0.1)")
+    global TARGET_IP
+    if args.target_ip:
+        TARGET_IP = args.target_ip
+    print(f"Safe: traffic only to {TARGET_IP}")
     print("=" * 60)
 
-    # If no specific test chosen, run all quickly then exit
     run_all = not (args.syn or args.scan or args.udp or args.data or args.baseline)
 
     try:

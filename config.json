@@ -1,9 +1,9 @@
 {
-  "interface_name": "\\Device\\NPF_{215A437D-1AD7-42F5-A391-BF1066CA8627}",
-  "windowSeconds": 2,
-  "batchSize": 200,
+  "interface_name": "LOOPBACK",
+  "windowSeconds": 5,
+  "batchSize": 50,
   "serverUrl": "http://127.0.0.1:5000/predict",
-  "mlThreshold": 0.7,
+  "mlThreshold": 0.5,
   "rules": {
     "icmpRate": 2000,
     "synRate": 3000,

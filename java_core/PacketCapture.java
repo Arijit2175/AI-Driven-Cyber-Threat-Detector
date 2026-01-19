@@ -5,13 +5,11 @@ import java.util.concurrent.*;
 import org.pcap4j.core.*;
 import org.pcap4j.packet.*;
 
-// A class to capture network flows from CSV or live interface using pcap4j.
 public class PacketCapture {
     private String csvPath;
     private PcapHandle handle;
     private int windowSeconds;
 
-    // Flow aggregation map: key = 5-tuple hash, value = FlowStats
     private Map<String, FlowStats> activeFlows = new ConcurrentHashMap<>();
     private long windowStartTime;
 
@@ -40,8 +38,25 @@ public class PacketCapture {
         }
     }
 
+    public static void main(String[] args) throws Exception {
+        listInterfaces();
+    }
+
     private static PcapNetworkInterface findInterface(String name) throws PcapNativeException {
-        for (PcapNetworkInterface nif : Pcaps.findAllDevs()) {
+        List<PcapNetworkInterface> nifs = Pcaps.findAllDevs();
+
+        if (name != null && name.equalsIgnoreCase("LOOPBACK")) {
+            for (PcapNetworkInterface nif : nifs) {
+                String desc = nif.getDescription();
+                String n = nif.getName();
+                if ((desc != null && desc.toLowerCase().contains("loopback")) ||
+                        (n != null && n.toLowerCase().contains("loopback"))) {
+                    return nif;
+                }
+            }
+        }
+
+        for (PcapNetworkInterface nif : nifs) {
             if (nif.getName().equalsIgnoreCase(name) ||
                     (nif.getDescription() != null && nif.getDescription().contains(name))) {
                 return nif;
@@ -50,7 +65,6 @@ public class PacketCapture {
         return null;
     }
 
-    // CSV mode: read flows from file
     public List<Map<String, String>> readFlows() throws IOException {
         List<Map<String, String>> flows = new ArrayList<>();
         List<String> lines = Files.readAllLines(Paths.get(csvPath));
@@ -73,13 +87,11 @@ public class PacketCapture {
         return flows;
     }
 
-    // Live mode: capture next batch of flows after window expires
     public List<Map<String, String>> captureNextWindow()
             throws PcapNativeException, NotOpenException, InterruptedException {
         long now = System.currentTimeMillis();
         long elapsed = now - windowStartTime;
 
-        // Capture packets until window duration reached
         while (elapsed < windowSeconds * 1000) {
             try {
                 Packet packet = handle.getNextPacketEx();
@@ -87,12 +99,11 @@ public class PacketCapture {
                     processPacket(packet);
                 }
             } catch (EOFException | TimeoutException e) {
-                // Normal timeout - continue capturing
+                
             }
             elapsed = System.currentTimeMillis() - windowStartTime;
         }
 
-        // Window complete - aggregate flows and reset
         List<Map<String, String>> flows = aggregateFlows();
         activeFlows.clear();
         windowStartTime = System.currentTimeMillis();
@@ -117,7 +128,7 @@ public class PacketCapture {
             stats.addPacket(length);
 
         } catch (Exception e) {
-            // Skip malformed packets
+            
         }
     }
 
@@ -145,7 +156,6 @@ public class PacketCapture {
         }
     }
 
-    // Helper class to track flow statistics
     private static class FlowStats {
         int protocol;
         int packetCount;
