@@ -79,61 +79,6 @@ def udp_flood_simulation(duration=5):
     print(f"✓ Sent {count} UDP packets ({count/duration:.0f} per second)")
     print(f"   Expected detection: HIGH - UDP amplification pattern\n")
 
-def data_transfer_simulation():
-    """Simulates large data transfer"""
-    print("🟡 Simulating Large Data Transfer...")
-    print("   Sending 10MB of data")
-    print("   This should trigger MEDIUM severity alerts\n")
-    
-    target_ip = TARGET_IP
-    target_port = 9999
-    
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    try:
-        server.bind((target_ip, target_port))
-    except Exception:
-        print("   (Port in use, skipping server bind)")
-        return
-    server.listen(1)
-    server.settimeout(1)
-    
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    try:
-        client.connect((target_ip, target_port))
-        try:
-            conn, addr = server.accept()
-        except Exception:
-            print("   (Accept timeout, skipping)")
-            client.close()
-            server.close()
-            return
-
-        payload = b"X" * 1024 * 1024  
-        total_sent = 0
-        start = time.time()
-
-        for _ in range(10):  
-            client.send(payload)
-            total_sent += len(payload)
-
-        duration = time.time() - start
-
-        conn.close()
-        client.close()
-        server.close()
-
-        print(f"✓ Transferred {total_sent/1024/1024:.1f}MB in {duration:.1f}s")
-        print(f"   Expected detection: MEDIUM - Large rapid transfer\n")
-    except Exception as e:
-        print(f"   (Skipped - client connect failed or timeout: {e})\n")
-        try:
-            client.close()
-            server.close()
-        except Exception:
-            pass
-
 def normal_traffic_baseline():
     """Generates normal-looking traffic for comparison"""
     print("🟢 Generating Normal Traffic Baseline...")
@@ -159,7 +104,6 @@ def main():
     parser.add_argument("--syn", action="store_true", help="Run SYN-flood style connection attempts")
     parser.add_argument("--scan", action="store_true", help="Run rapid port scan simulation")
     parser.add_argument("--udp", action="store_true", help="Run UDP flood simulation")
-    parser.add_argument("--data", action="store_true", help="Run large data transfer simulation")
     parser.add_argument("--baseline", action="store_true", help="Run normal traffic baseline")
     parser.add_argument("--duration", type=int, default=5, help="Duration in seconds for flood tests")
     parser.add_argument("--target-ip", type=str, default=None, help="Target IP (default: 127.0.0.1). Use your LAN IP to hit a NIC.")
@@ -174,6 +118,7 @@ def main():
     print("=" * 60)
 
     run_all = not (args.syn or args.scan or args.udp or args.data or args.baseline)
+    run_all = not (args.syn or args.scan or args.udp or args.baseline)
 
     try:
         if args.baseline or run_all:
@@ -184,8 +129,6 @@ def main():
             port_scan_simulation()
         if args.udp or run_all:
             udp_flood_simulation(args.duration)
-        if args.data or run_all:
-            data_transfer_simulation()
     except KeyboardInterrupt:
         print("\nStopped by user")
     finally:
