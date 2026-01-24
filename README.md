@@ -69,9 +69,9 @@ AI-Driven-Cyber-Threat-Detector
 
 ## 🧠 AI Model
 
-The ML model can be trained using **`python_ml/train_model.py`** on `dataset/sample_traffic.csv`.  
-Typical features include flow duration, byte count, and packet rates.  
-You can use models like Random Forest, SVM, or a lightweight neural network.
+The system uses a **Random Forest Classifier** (ensemble learning) trained via **`python_ml/train_model.py`**.  
+The model analyzes 6 flow features: duration, total packets, total bytes, mean packet length, packet rate, and protocol.  
+With 100 decision trees and StandardScaler normalization, it achieves robust real-time threat detection with minimal false positives.
 
 Example training command:
 
