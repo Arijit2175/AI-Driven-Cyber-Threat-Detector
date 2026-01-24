@@ -364,6 +364,8 @@ Only test the detection system in:
 
 8. R. Sommer & V. Paxson, “Outside the Closed World: On Using Machine Learning for Network Intrusion Detection,” IEEE Symposium on Security and Privacy, 2010.
 
+9. UNSW-NB15 Dataset – https://research.unsw.edu.au/projects/unsw-nb15-dataset
+
 <br>
 
 **👨‍💻 Developed by** - @Arijit2175
