@@ -84,8 +84,8 @@ With 100 decision trees and StandardScaler normalization, it achieves robust rea
 | Protocol | Encoded transport protocol (TCP/UDP/ICMP/other) |
 
 ### Evaluation Visualizations
-- Confusion matrix: ![Confusion Matrix](python_ml/confusion_matrix.png)
-- Metrics chart (test vs k-fold): ![Metrics Chart](python_ml/metrics_chart.png)
+- Confusion matrix: ![Confusion Matrix](assets/confusion_matrix.png)
+- Metrics chart (test vs k-fold): ![Metrics Chart](assets/metrics_chart.png)
 
 Example training command:
 
@@ -330,6 +330,19 @@ You can showcase your dashboard screenshots here:
 3. Frontend:
     - Chart.js
     - Vanilla HTML, CSS, JavaScript
+
+---
+
+## ⚠️ Caution
+
+This project is built strictly for **educational and research purposes**.  
+Do **NOT** test cyberattack detection by launching attacks on external servers, public networks, or any organization’s systems — this is illegal and unethical.
+
+Only test the detection system in:
+
+- A **local machine**
+- A **virtual machine (VM)**
+- A **controlled lab environment**
 
 ---
 
