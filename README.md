@@ -73,6 +73,20 @@ The system uses a **Random Forest Classifier** (ensemble learning) trained via *
 The model analyzes 6 flow features: duration, total packets, total bytes, mean packet length, packet rate, and protocol.  
 With 100 decision trees and StandardScaler normalization, it achieves robust real-time threat detection with minimal false positives.
 
+### Model Factors
+| Feature | Description |
+| --- | --- |
+| Duration | Flow lifetime in seconds |
+| Total Packets | Count of packets in the flow |
+| Total Bytes | Bytes transferred in the flow |
+| Mean Packet Length | Average bytes per packet |
+| Packet Rate | Packets per second |
+| Protocol | Encoded transport protocol (TCP/UDP/ICMP/other) |
+
+### Evaluation Visualizations
+- Confusion matrix: ![Confusion Matrix](python_ml/confusion_matrix.png)
+- Metrics chart (test vs k-fold): ![Metrics Chart](python_ml/metrics_chart.png)
+
 Example training command:
 
 ```
