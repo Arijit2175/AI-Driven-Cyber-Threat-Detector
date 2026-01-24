@@ -17,9 +17,11 @@ def main():
         print("Flow CSV not found:", FLOW_CSV)
         return
 
-    df = pd.read_csv(FLOW_CSV)
+    df = pd.read_csv(FLOW_CSV, dtype={'protocol': str})
     print("Loaded flow CSV:", df.shape)
 
+    df['protocol'] = df['protocol'].astype(str)
+    
     le = LabelEncoder()
     df['protocol'] = le.fit_transform(df['protocol'])
     joblib.dump(le, PROTOCOL_ENCODER_FILE)

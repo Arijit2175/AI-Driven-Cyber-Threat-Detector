@@ -23,8 +23,29 @@ if os.path.exists(PROTOCOL_ENCODER_FILE):
         protocol_encoder = None
 
 FEATURE_COLS = ["duration", "total_pkts", "total_bytes", "mean_pkt_len", "pkt_rate", "protocol"]
+ALERT_SCORE_THRESHOLD = 0.7  
 
 latest_flows = []
+
+
+def suppress_small_flow(flow: dict, pred: int, score: float):
+    """Suppress tiny low-rate flows that look like keep-alives/DNS noise."""
+    try:
+        pkts = float(flow.get('total_pkts', 0))
+        bytes_ = float(flow.get('total_bytes', 0))
+        rate = float(flow.get('pkt_rate', 0))
+        if pkts <= 2 and bytes_ < 800 and rate < 3:
+            return 0, 0.0
+    except Exception:
+        pass
+    return pred, score
+
+
+def apply_score_threshold(pred: int, score: float):
+    """Drop alerts below the configured probability threshold."""
+    if score < ALERT_SCORE_THRESHOLD:
+        return 0, score
+    return pred, score
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -61,7 +82,9 @@ def predict():
             X_scaled = scaler.transform(df)
             pred = int(model.predict(X_scaled)[0])
             proba = model.predict_proba(X_scaled)
-            score = float(proba[0][1]) 
+            score = float(proba[0][1])
+            pred, score = suppress_small_flow(df.iloc[0].to_dict(), pred, score)
+            pred, score = apply_score_threshold(pred, score)
             return jsonify({"prediction": pred, "score": score})
         except Exception as e:
             return jsonify({"error": f"Bad input for 'features': {e}"}), 400
@@ -105,7 +128,11 @@ def predict():
             preds = [int(p) for p in preds]
             
             proba = model.predict_proba(X_scaled)
-            scores = [float(proba[i][1]) for i in range(len(proba))]  
+            scores = [float(proba[i][1]) for i in range(len(proba))]
+
+            for i, row in df.iterrows():
+                preds[i], scores[i] = suppress_small_flow(row.to_dict(), preds[i], scores[i])
+                preds[i], scores[i] = apply_score_threshold(preds[i], scores[i])
 
             global latest_flows
             latest_flows = []
@@ -139,7 +166,6 @@ def update_flows():
         return jsonify({"status": "ok", "count": len(latest_flows)})
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-# Get flows endpoint - returns current session flows + all malicious flows from CSV
 @app.route('/get_flows', methods=['GET'])
 def get_flows():
     """Return the latest flows from current session + all malicious flows from CSV"""
@@ -154,6 +180,9 @@ def get_flows():
                 flow_dict = row.to_dict()
                 flow_dict = {k: (float(v) if isinstance(v, (np.floating, float)) else int(v) if isinstance(v, (np.integer, int)) else v) 
                             for k, v in flow_dict.items()}
+                pred_tmp, score_tmp = suppress_small_flow(flow_dict, 1, 0.95)
+                if pred_tmp == 0:
+                    continue
                 is_duplicate = any(
                     f.get('duration') == flow_dict.get('duration') and
                     f.get('total_pkts') == flow_dict.get('total_pkts') and
