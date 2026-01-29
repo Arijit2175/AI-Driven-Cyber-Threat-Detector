@@ -134,13 +134,13 @@ cd java_core
 We need to have the gson-x.x.x.jar file in java_core folder for the java components to be compiled
 
 ```
-javac -cp ".;gson-x.x.x.jar" *.java
+javac -cp "lib/*" *.java
 ```
 
 3. Run the main module:
 
 ```
-java -cp ".;gson-x.x.x.jar" Main
+java -cp "lib/*;." Main
 ```
 
 4. The java program:
